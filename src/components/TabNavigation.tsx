@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from '../screens/Home';
-import Tarefa from '../screens/Tarefa';
+import Tarefa from '../screens/AdicionarMedicamento';
 import Perfil from '../screens/Perfil';
 import { Ionicons } from '@expo/vector-icons';
 

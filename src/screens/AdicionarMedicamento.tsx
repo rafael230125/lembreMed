@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackScreenProps } from '@react-navigation/stack';
-import { Lembrete } from '.././types/types';
+import { Lembrete } from '../types/types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../components/Navigation';
 import CustomButton from '../components/CustomButton';
@@ -10,10 +9,10 @@ import CustomInput from '../components/CustomInput';
 
 const { width, height } = Dimensions.get('window');
 
-type TarefaContaScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Tarefa'>;
+type AdicionarMedicamentoScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AdicionarMedicamento'>;
 
 type Props = {
-  navigation: TarefaContaScreenNavigationProp;
+  navigation: AdicionarMedicamentoScreenNavigationProp;
 };
 
 export default function Tarefa({ navigation}: Props) {
@@ -44,7 +43,7 @@ export default function Tarefa({ navigation}: Props) {
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.outerContainer}>
         <View style={styles.container}>
-          <Text style={styles.title}>Adicionar tarefa</Text> 
+          <Text style={styles.title}>Adicionar medicamento</Text> 
 
           <Text style={styles.label}>Nome:</Text>
           <CustomInput 
@@ -52,15 +51,6 @@ export default function Tarefa({ navigation}: Props) {
             onChangeText={setTitulo} 
             placeholder="Digite o nome"
             placeholderTextColor="#aaa"
-          />
-
-          <Text style={styles.label}>Ícone:</Text>       
-          <CustomInput 
-            value={icone} 
-            onChangeText={setIcone} 
-            placeholder="Escolha um emoji"
-            placeholderTextColor="#aaa"
-            keyboardType="default"
           />
 
           <Text style={styles.label}>Horário:</Text>

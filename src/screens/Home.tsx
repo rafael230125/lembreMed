@@ -17,31 +17,10 @@ const { width, height } = Dimensions.get('window');
 const tarefas = [
   {
     id: '1',
-    titulo: 'Mercado',
+    titulo: 'Medicamento1',
     horario: '10:00 - 11:00',
     cor: '#8DA8C8',
-    icon: '🛒',
-  },
-  {
-    id: '2',
-    titulo: 'Estudar',
-    horario: '13:00 - 14:00',
-    cor: '#A3B28D',
-    icon: '📚',
-  },
-  {
-    id: '3',
-    titulo: 'Consulta',
-    horario: '15:00 - 16:00',
-    cor: '#FCA9F1',
-    icon: '📅',
-  },
-  {
-    id: '4',
-    titulo: 'Aniversário',
-    horario: '19:00 - 21:00',
-    cor: '#F57F7F',
-    icon: '🎁',
+    icon: '',
   },
 ];
 
@@ -54,10 +33,9 @@ export default function Home() {
         <Text style={styles.icon}>{item.icon}</Text>
       </View>
       <View style={styles.cardText}>
-        <Text style={styles.cardTitle}>{item.titulo}</Text>
-        <Text style={styles.cardTime}>{item.horario}</Text>
+        <Text style={styles.cardTitle}>Nome: {item.titulo}</Text>
+        <Text style={styles.cardTime}>Horário: {item.horario}</Text>
       </View>
-      <Ionicons name="checkmark-circle" size={28} color="green" />
     </TouchableOpacity>
   );
 
@@ -71,7 +49,7 @@ export default function Home() {
             value={search}
             onChangeText={(text) => setSearch(text)}
           />
-          <Text style={styles.subtitle}>Minhas tarefas</Text>
+          <Text style={styles.subtitle}>Lista de medicamentos</Text>
           <FlatList
             data={tarefas.filter((profissional) =>
               profissional.titulo.toLowerCase().includes(search.toLowerCase())
