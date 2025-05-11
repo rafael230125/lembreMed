@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   link: {
-    color: '#68BAE8',
+    color: '#70C4E8',
     fontWeight: 'bold',
   },
   footerContainer: {
