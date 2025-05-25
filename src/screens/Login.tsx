@@ -4,8 +4,10 @@ import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../components/Navigation';
-import { auth } from '../services/firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../services/firebaseConfig';
+import { useUserContext } from '../context/UserContext';
+import { doc, getDoc } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
@@ -17,6 +19,7 @@ type Props = {
 };
 
 export default function Login({ navigation }: Props) {
+  const { setUserData } = useUserContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -29,18 +32,29 @@ export default function Login({ navigation }: Props) {
   );
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
-      return;
-    }
-
     try {
       setIsLoading(true);
 
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      navigation.navigate('Main');
+      const userDoc = await getDoc(doc(db, `users/${user.uid}`));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+
+        setUserData({
+          uid: user.uid,
+          email: user.email || '',
+          name: userData.name || '',
+          phone: userData.phone || '',
+          birthDate: userData.birthDate || '',
+        });
+
+        navigation.navigate('Main');
+      } else {
+        console.error('Documento não encontrado no Firestore.');
+      }
 
     } catch (error) {
       Alert.alert('Erro ao fazer login', 'Verifique suas credenciais e tente novamente.');
@@ -48,25 +62,25 @@ export default function Login({ navigation }: Props) {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.outerContainer}> 
-        <View style={styles.container}>         
-          <Image 
-            source={require('../../assets/logo.png')} 
-            style={styles.logo} 
-            resizeMode="contain" 
-          />       
-          <Text style={styles.subtitle}>Faça o login em sua conta</Text> 
-          <CustomInput 
+      <View style={styles.outerContainer}>
+        <View style={styles.container}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.subtitle}>Faça o login em sua conta</Text>
+          <CustomInput
             value={email}
             onChangeText={setEmail}
             placeholder="Email"
             placeholderTextColor="#aaa"
             keyboardType="email-address"
           />
-          <CustomInput 
+          <CustomInput
             value={password}
             onChangeText={setPassword}
             placeholder="Senha"
@@ -75,7 +89,7 @@ export default function Login({ navigation }: Props) {
           />
 
           {isLoading ? (
-            <ActivityIndicator size="large" color="#ACBC89" />
+            <ActivityIndicator size="large" color="#68BAE8" />
           ) : (
             <CustomButton title="Entrar" onPress={handleLogin} />
           )}
@@ -98,29 +112,29 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingHorizontal: width * 0.1, 
+    paddingHorizontal: width * 0.1,
   },
   container: {
     flex: 1,
     justifyContent: 'flex-start',
     paddingTop: height * 0.1,
     backgroundColor: '#fff',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   logo: {
-    width: width * 1,  
+    width: width * 1,
     height: height * 0.3
   },
   title: {
-    color:'#ACBC89',
-    fontSize: width * 0.06, 
+    color: '#ACBC89',
+    fontSize: width * 0.06,
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
   },
   subtitle: {
     color: '#000',
-    fontSize: width * 0.04, 
+    fontSize: width * 0.04,
     fontWeight: 'bold',
     marginBottom: 28,
     width: '100%',
@@ -129,15 +143,15 @@ const styles = StyleSheet.create({
   registerText: {
     marginTop: 20,
     color: '#858585',
-    fontSize: width * 0.04, 
+    fontSize: width * 0.04,
     textAlign: 'center',
   },
   link: {
-    color: '#70C4E8',
+    color: '#68BAE8',
     fontWeight: 'bold',
   },
   footerContainer: {
-    marginTop: height * 0.15, 
+    marginTop: height * 0.15,
   },
   linkSobre: {
     color: '#ACBC89',
@@ -147,7 +161,7 @@ const styles = StyleSheet.create({
   nomeText: {
     marginTop: 20,
     color: '#858585',
-    fontSize: width * 0.04, 
+    fontSize: width * 0.04,
     textAlign: 'center',
   },
 });
