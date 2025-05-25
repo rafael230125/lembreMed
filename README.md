@@ -1,14 +1,15 @@
 # 📱 lembreMed
 
-> Aplicativo de lembretes de medicamentos.  
+> Aplicativo de lembretes de medicamentos.
+> Permite que o usuário registre seus remédios e configure notificações para lembrar os horários de tomar.
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
 - [React Native](https://reactnative.dev/)
-- [Expo](https://expo.dev/) *(se estiver usando)*
-- [TypeScript](https://www.typescriptlang.org/) *(opcional)*
+- [Expo](https://expo.dev/) 
+- [TypeScript](https://www.typescriptlang.org/) 
 
 ---
 
@@ -16,10 +17,10 @@
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/seu-projeto.git
+git clone https://github.com/marchiorog/lembreMed.git
 
 # Acesse o diretório do projeto
-cd seu-projeto
+cd lembreMed
 
 # Instale as dependências
 npm install
