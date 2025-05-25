@@ -31,6 +31,7 @@ npx expo start
 # ou, caso não use expo
 npx react-native run-android
 
+---
 
 ## 📁 Estrutura de Pastas
 
@@ -46,6 +47,8 @@ npx react-native run-android
 ├── App.tsx              # Componente principal
 ├── package.json
 └── README.md
+
+---
 
 ## ✅ Funcionalidades
 
