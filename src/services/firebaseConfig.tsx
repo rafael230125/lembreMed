@@ -1,18 +1,26 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { getFirestore, collection,getDocs, query, where } from 'firebase/firestore';
+import {
+  FIREBASE_API_KEY,
+  FIREBASE_AUTH_DOMAIN,
+  FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET,
+  FIREBASE_MESSAGING_SENDER_ID,
+  FIREBASE_APP_ID
+} from '@env';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBZb9M_n7UXfUcLIAW09m0JDQGRzCjCny8",
-  authDomain: "did-i-forgot-app.firebaseapp.com",
-  projectId: "did-i-forgot-app",
-  storageBucket: "did-i-forgot-app.firebasestorage.app",
-  messagingSenderId: "1061811257129",
-  appId: "1:1061811257129:web:1ccc1a89c3987501290138"
+  apiKey: FIREBASE_API_KEY,
+  authDomain: FIREBASE_AUTH_DOMAIN,
+  projectId: FIREBASE_PROJECT_ID,
+  storageBucket: FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+  appId: FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 const db = getFirestore(app);
-export { db };
+export { db, collection, getDocs, query, where};
