@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-//import Icon from 'react-native-vector-icons/MaterialIcons';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useUserContext } from '../context/UserContext'; 
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { auth, db } from '../services/firebaseConfig';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 type PerfilScreenNavigationProp = StackNavigationProp<{
   Configuracao: undefined;
@@ -18,40 +19,74 @@ type Props = {
 const { width, height } = Dimensions.get('window');
 
 export default function Perfil({ navigation }: Props) {
-  //const { userData } = useUserContext(); 
-  const userName = 'Usuário'; 
-  const userEmail =  'usuário@example.com';
+  const [user, setUser] = useState<User | null>(null);
+  const [nome, setNome] = useState('teste');
+  const [email, setEmail] = useState('teste@email.com');
   const userProfileImage  =  'sem foto';
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        const userDocRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setNome(userData.name || '');
+          setEmail(userData.email || '');
+        }
+      } else {
+        setUser(null);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const handleLogout = () => {
+    signOut(auth).then(() => {
+      navigation.navigate('Login');
+    }).catch((error) => {
+      console.error('Erro ao fazer logout: ', error);
+    });
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Perfil</Text> 
-        
-        <View style={styles.profileContainer}>
-          <View style={styles.profileCircle}>
-            <Image source={{ uri: userProfileImage }} style={styles.profileImage} />
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{userName}</Text>
-            <Text style={styles.userEmail}>{userEmail}</Text>
-          </View>
-        </View>
+        <Text style={styles.title}>Perfil</Text>
 
-        <View style={styles.optionsContainer} >
+        {user ? (
+          <View style={styles.profileContainer}>
+            <View style={styles.profileCircle}>
+              <Image source={{ uri: userProfileImage }} style={styles.profileImage} />
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{nome || 'Usuário'}</Text>
+              <Text style={styles.userEmail}>{email}</Text>
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.loadingText}>Carregando informações do usuário...</Text>
+        )}
+
+        <View style={styles.optionsContainer}>
           <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('MeuPerfil')}>
-            <Ionicons name="person-outline" size={24} color={""} />
+            <Ionicons name="person-outline" size={24} color="black" />
             <Text style={styles.optionText}>Meu perfil</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Configuracao')}>
-            <Ionicons name="settings" size={24} color={""} />
+            <Ionicons name="settings" size={24} color="black" />
             <Text style={styles.optionText}>Configurações</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutOption} onPress={() => navigation.navigate('Login')}>
-            <Ionicons name="exit-outline" size={24} color={""} />
-            <Text style={styles.logoutText}>Sair</Text>
-          </TouchableOpacity>
+
+          {user && (
+            <TouchableOpacity style={styles.logoutOption} onPress={handleLogout}>
+              <Ionicons name="exit-outline" size={24} color="black" />
+              <Text style={styles.logoutText}>Sair</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -65,14 +100,14 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.07, 
-    paddingTop: height * 0.05, 
+    paddingHorizontal: width * 0.07,
+    paddingTop: height * 0.05,
     backgroundColor: '#fff',
   },
   title: {
     fontSize: width * 0.05,
     fontWeight: 'bold',
-    marginBottom: height * 0.04, 
+    marginBottom: height * 0.04,
     textAlign: 'center',
   },
   profileContainer: {
@@ -102,11 +137,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   userEmail: {
-    fontSize: width * 0.04, 
+    fontSize: width * 0.04,
     color: '#777',
   },
+  loadingText: {
+    fontSize: width * 0.04,
+    color: '#777',
+    textAlign: 'center',
+  },
   optionsContainer: {
-    marginBottom: height * 0.03, 
+    marginBottom: height * 0.03,
   },
   option: {
     flexDirection: 'row',
@@ -121,11 +161,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: height * 0.02,
-    marginBottom: height * 0.12, 
+    marginBottom: height * 0.12,
   },
   logoutText: {
     marginLeft: width * 0.03,
     fontSize: width * 0.04,
   },
 });
-

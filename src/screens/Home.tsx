@@ -1,74 +1,113 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   FlatList,
   Dimensions,
   TouchableOpacity,
-  ScrollView
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SearchBar from '../components/SearchBar';
+import { db, collection, getDocs } from '../services/firebaseConfig';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../components/Navigation';
+import { getAuth } from "firebase/auth";
+import { query, where } from '../services/firebaseConfig';
+import { deleteDoc, doc } from 'firebase/firestore';
+
 
 const { width, height } = Dimensions.get('window');
 
-const tarefas = [
-  {
-    id: '1',
-    titulo: 'Medicamento1',
-    horario: '10:00 - 11:00',
-    cor: '#8DA8C8',
-    icon: '',
-  },
-];
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
-export default function Home() {
+type Props = {
+  navigation: HomeScreenNavigationProp;
+};
+
+export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
+  const [medicamentos, setMedicamentos] = useState<any[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchMedicamentos = async () => {
+        try {
+          const user = getAuth().currentUser;
+
+          if (!user) {
+            Alert.alert('Erro', 'Usuário não autenticado.');
+            return;
+          }
+
+          const medicamentosRef = collection(db, 'medicamentos');
+          const q = query(medicamentosRef, where('userId', '==', user.uid));
+          const medicamentosSnapshot = await getDocs(q);
+          const medicamentosList = medicamentosSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setMedicamentos(medicamentosList);
+        } catch (error) {
+          Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
+          console.error(error);
+        }
+      };
+
+      fetchMedicamentos();
+    }, [])
+  );
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'tarefas', id));
+      setMedicamentos((prev) => prev.filter((tarefa) => tarefa.id !== id));
+      Alert.alert('Sucesso', 'Lembrete concluído com sucesso!');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
+      console.error(error);
+    }
+  };
+
 
   const renderItem = ({ item }: any) => (
     <TouchableOpacity style={[styles.card, { backgroundColor: item.cor }]}>
       <View style={styles.cardIcon}>
-        <Text style={styles.icon}>{item.icon}</Text>
       </View>
       <View style={styles.cardText}>
-        <Text style={styles.cardTitle}>Nome: {item.titulo}</Text>
-        <Text style={styles.cardTime}>Horário: {item.horario}</Text>
+        <Text style={styles.cardTitle}>{item.titulo}</Text>
+        <Text style={styles.cardTime}>{item.horario}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.outerContainer}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Home</Text>
-          <SearchBar
-            placeholder="Buscar"
-            value={search}
-            onChangeText={(text) => setSearch(text)}
-          />
-          <Text style={styles.subtitle}>Lista de medicamentos</Text>
-          <FlatList
-            data={tarefas.filter((profissional) =>
-              profissional.titulo.toLowerCase().includes(search.toLowerCase())
-            )}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 80 }}
-          />
-        </View>
+    <View style={styles.outerContainer}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Home</Text>
+        <SearchBar
+          placeholder="Buscar"
+          value={search}
+          onChangeText={(text) => setSearch(text)}
+        />
+        <Text style={styles.subtitle}>Meus medicamentos</Text>
+        <FlatList
+          data={medicamentos.filter((medicamento) =>
+            medicamento.titulo.toLowerCase().includes(search.toLowerCase())
+          )}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 80 }}
+        />
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-  },
   outerContainer: {
     flex: 1,
     backgroundColor: '#fff',
@@ -83,22 +122,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: width * 0.05,
     fontWeight: 'bold',
-    marginBottom: height * 0.04, 
+    marginBottom: height * 0.04,
     textAlign: 'center',
-  },
-  search: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    height: 45,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    fontSize: 16,
   },
   subtitle: {
     fontSize: width * 0.05,
     fontWeight: 'bold',
-    marginBottom: height * 0.03, 
-    marginTop: height * 0.02, 
+    marginBottom: height * 0.03,
+    marginTop: height * 0.02,
   },
   card: {
     flexDirection: 'row',
@@ -118,11 +149,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#000',
   },
   cardTime: {
     fontSize: 14,
-    color: '#f0f0f0',
+    color: '#000',
   },
   cardIcon: {
     width: 40,
@@ -132,5 +163,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
   },
 });

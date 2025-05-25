@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import CustomButton from '../components/CustomButton'; 
-import CustomInput from '../components/CustomInput';  
+import CustomButton from '../components/CustomButton';
+import CustomInput from '../components/CustomInput';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../components/Navigation';
+import { auth } from '../services/firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../services/firebaseConfig'; 
-import { useUserContext } from '../context/UserContext'; 
-import { doc, getDoc } from 'firebase/firestore';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,42 +21,32 @@ export default function Login({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  useFocusEffect(
+    useCallback(() => {
+      setEmail('');
+      setPassword('');
+    }, [])
+  );
+
   const handleLogin = async () => {
-    {/*
+    if (!email || !password) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      return;
+    }
+
     try {
       setIsLoading(true);
 
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const userDoc = await getDoc(doc(db, `users/${user.uid}`));
+      navigation.navigate('Main');
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-
-        setUserData({
-          uid: user.uid,
-          email: user.email || '',
-          name: userData.name || '',
-          phone: userData.phone || '',
-          birthDate: userData.birthDate || '',
-          gender: userData.gender || '',
-          role: userData.role || '',
-          profileImage: userData.profileImage || '',
-        });
-  
-        navigation.navigate('Main');
-      } else {
-        console.error('Documento não encontrado no Firestore.');
-      }
     } catch (error) {
       Alert.alert('Erro ao fazer login', 'Verifique suas credenciais e tente novamente.');
     } finally {
       setIsLoading(false);
     }
-      */}
-
-      navigation.navigate('Main');
   };
   
   return (

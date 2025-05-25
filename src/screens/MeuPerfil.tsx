@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ScrollView, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
-import Toast from 'react-native-toast-message';
-import { useUserContext } from '../context/UserContext';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore'; 
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { auth, db } from '../services/firebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,8 +20,10 @@ type Props = {
 };
 
 export default function MeuPerfil({ navigation }: Props) {
-  //const { userData, updateUserField } = useUserContext();
-  //const db = getFirestore();
+  const [user, setUser] = useState<User | null>(null);
+  const [nome, setNome] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -42,42 +44,52 @@ export default function MeuPerfil({ navigation }: Props) {
     }
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        const userDocRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setNome(userData.name || '');
+          setTelefone(userData.phone || '');
+          setDataNascimento(userData.birthDate || '');
+        }
+      } else {
+        setUser(null);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
   const saveProfile = async () => {
-
-    {/* 
     try {
-      const userId = userData.uid || 'default_user'; 
-      const userDoc = doc(db, 'users', userId); 
-      
-      await updateDoc(userDoc, {
-        name: userData.name,
-        phone: userData.phone,
-        email: userData.email,
-        birthDate: userData.birthDate,
-        profileImage: userData.profileImage,
+      const user = getAuth().currentUser;
+
+      if (!user) {
+        Alert.alert('Erro', 'Usuário não autenticado.');
+        return;
+      }
+
+      const userDocRef = doc(db, 'users', user.uid);
+
+      await updateDoc(userDocRef, {
+        name: nome,
+        phone: telefone,
+        birthDate: dataNascimento,
       });
 
-      Toast.show({
-        type: 'success',
-        text1: 'Perfil salvo com sucesso! 🧑',
-        visibilityTime: 1000,
-        autoHide: true,
-        topOffset: 50,
-      });
+      Alert.alert('Perfil', 'Salvo com sucesso!');
 
       navigation.navigate('Main');
     } catch (error) {
-      console.error('Erro ao salvar o perfil:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao salvar o perfil!',
-        visibilityTime: 1000,
-        autoHide: true,
-        topOffset: 50,
-      });
+      console.error(error);
+      Alert.alert('Erro', 'Não foi possível salvar o perfil.');
     }
-      */}
   };
+
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -93,29 +105,28 @@ export default function MeuPerfil({ navigation }: Props) {
             <Ionicons name="pencil" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
-
         <View style={styles.formContainer}>
           <Text style={styles.label}>Nome</Text>
           <CustomInput
-            value={ ''}
+            value={nome}
             placeholder="Nome"
             placeholderTextColor="#aaa"
-            onChangeText={(name) => updateUserField('name', name)}
+            onChangeText={(text) => setNome(text)}
           />
 
           <Text style={styles.label}>Telefone</Text>
           <CustomInput
-            value={ ''}
+            value={telefone}
             placeholder="Telefone"
             placeholderTextColor="#aaa"
-            onChangeText={(phone) => updateUserField('phone', phone)}
+            onChangeText={(text) => setTelefone(text)}
           />
           <Text style={styles.label}>Data de Nascimento</Text>
           <CustomInput
-            value={ ''}
+            value={dataNascimento}
             placeholder="Data de nascimento"
             placeholderTextColor="#aaa"
-            onChangeText={(birthDate) => updateUserField('birthDate', birthDate)}
+            onChangeText={(text) => setDataNascimento(text)}
           />
         </View>
 
@@ -131,7 +142,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.1, 
+    paddingHorizontal: width * 0.1,
     paddingTop: height * 0.05,
     backgroundColor: '#fff',
     alignItems: 'center',

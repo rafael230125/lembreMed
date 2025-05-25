@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, ScrollView
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useUserContext } from '../context/UserContext';
+import { useUserContext } from '../context/UserContext'; 
 import { auth } from '../services/firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -20,13 +20,12 @@ type Props = {
 };
 
 export default function Cadastro({ navigation }: Props) {
-  //const { setUserData } = useUserContext();
+  const { setUserData } = useUserContext();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleCadastro = async () => {
-    {/*
     if (!email || !password) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
@@ -51,9 +50,6 @@ export default function Cadastro({ navigation }: Props) {
     } finally {
       setIsLoading(false);
     }
-      */}
-
-      navigation.navigate('InformacaoConta');
   };
 
   return (
@@ -81,14 +77,14 @@ export default function Cadastro({ navigation }: Props) {
             secureTextEntry
           />
           {isLoading ? (
-            <ActivityIndicator size="large" color="#ACBC89" />
+            <ActivityIndicator size="large" color="#68BAE8" />
           ) : (
-            <CustomButton title="Cadastrar" onPress={handleCadastro} />
+            <CustomButton title="Criar" onPress={handleCadastro} />
           )}
 
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
             <Text style={styles.registerText}>
-              Já tem uma conta? <Text style={styles.link}>Faça login</Text>
+              Já tem uma conta? <Text style={styles.link}>Faça o login</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -139,7 +135,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   link: {
-    color: '#70C4E8',
+    color: '#68BAE8',
     fontWeight: 'bold',
   },
   footerContainer: {
