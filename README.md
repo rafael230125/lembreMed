@@ -9,7 +9,7 @@
 - [React Native](https://reactnative.dev/)
 - [Expo](https://expo.dev/) *(se estiver usando)*
 - [TypeScript](https://www.typescriptlang.org/) *(opcional)*
-- 
+
 ---
 
 ## 📦 Instalação
@@ -30,6 +30,4 @@ yarn install
 npx expo start
 # ou, caso não use expo
 npx react-native run-android
-
----
 
