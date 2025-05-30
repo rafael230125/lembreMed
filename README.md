@@ -1,4 +1,7 @@
-# 📱 lembreMed
+<h1>
+  <img src="assets/logo.png" alt="Logo" width="33" style="vertical-align: middle;">
+  lembreMed
+</h1>
 
 > Aplicativo de lembretes de medicamentos.
 > Permite que o usuário registre seus remédios e configure notificações para lembrar os horários de tomar.
