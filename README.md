@@ -9,7 +9,8 @@
 
 - [React Native](https://reactnative.dev/)
 - [Expo](https://expo.dev/) 
-- [TypeScript](https://www.typescriptlang.org/) 
+- [TypeScript](https://www.typescriptlang.org/)
+- [Firebase](https://firebase.google.com/)
 
 ---
 
