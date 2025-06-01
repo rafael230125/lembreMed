@@ -8,6 +8,9 @@ import { db } from '../services/firebaseConfig';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
+import Modal from 'react-native-modal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,6 +25,9 @@ export default function Tarefa({ navigation }: Props) {
   const [cor, setCor] = useState('#ffffff');
   const [data, setData] = useState(new Date());
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+  const [imagem, setImagem] = useState<string | null>(null);
+  const [isImageOptionsVisible, setImageOptionsVisible] = useState(false);
+
 
 
   const predefinedColors = [
@@ -29,6 +35,43 @@ export default function Tarefa({ navigation }: Props) {
     '#E3F9FF', '#FFFCE3', '#E3FFF4',
   ];
 
+  const handleChooseImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Permita acesso à galeria para escolher imagens.');
+      return;
+    }
+  
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+  
+    if (!result.canceled) {
+      setImagem(result.assets[0].uri);
+    }
+  };
+  
+  const handleTakePicture = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Permita acesso à câmera para tirar fotos.');
+      return;
+    }
+  
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+  
+    if (!result.canceled) {
+      setImagem(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -51,6 +94,7 @@ export default function Tarefa({ navigation }: Props) {
       setTitulo('');
       setCor('#ffffff');
       setData(new Date());
+      setImagem(null);
 
       Alert.alert('Sucesso', 'Lembrete salvo com sucesso!');
       navigation.goBack();
@@ -108,6 +152,54 @@ export default function Tarefa({ navigation }: Props) {
               />
             ))}
           </View>
+
+          <Text style={styles.label}>Foto do medicamento:</Text>
+
+          <TouchableOpacity onPress={() => setImageOptionsVisible(true)} style={styles.imagePicker}>
+          {imagem ? (
+            <Image
+              source={{ uri: imagem }}
+              style={styles.imagePreview}
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={styles.imagePlaceholderText}>Toque para adicionar imagem</Text>
+          )}
+        </TouchableOpacity>
+
+        <Modal
+          isVisible={isImageOptionsVisible}
+          onBackdropPress={() => setImageOptionsVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.modalButton} onPress={async () => {
+              setImageOptionsVisible(false);
+              await handleTakePicture();
+            }}>
+              <Text style={styles.modalButtonText}>Tirar foto</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalButton} onPress={async () => {
+              setImageOptionsVisible(false);
+              await handleChooseImage();
+            }}>
+              <Text style={styles.modalButtonText}>Escolher da galeria</Text>
+            </TouchableOpacity>
+
+            {imagem && (
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#ffcccc' }]} onPress={() => {
+                setImageOptionsVisible(false);
+                setImagem(null);
+              }}>
+                <Text style={[styles.modalButtonText, { color: '#a00' }]}>Remover imagem</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.modalCancelButton} onPress={() => setImageOptionsVisible(false)}>
+              <Text style={styles.modalButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
 
           <CustomButton title="Salvar" style={styles.saveButton} onPress={handleSave} />
 
@@ -190,5 +282,50 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     backgroundColor: '#FF6363',
+  },
+
+
+  imagePicker: {
+    height: 200,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  imagePlaceholderText: {
+    color: '#888',
+    fontSize: 16,
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalButton: {
+    width: '100%',
+    padding: 15,
+    alignItems: 'center',
+    marginBottom: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  modalCancelButton: {
+    width: '100%',
+    padding: 15,
+    alignItems: 'center',
+    backgroundColor: '#ddd',
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    fontSize: 16,
   },
 });
