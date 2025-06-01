@@ -7,6 +7,7 @@ import CustomInput from '../components/CustomInput';
 import { db } from '../services/firebaseConfig'; 
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,6 +21,8 @@ export default function Tarefa({ navigation }: Props) {
   const [titulo, setTitulo] = useState('');
   const [cor, setCor] = useState('#ffffff');
   const [data, setData] = useState(new Date());
+  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+
 
   const predefinedColors = [
     '#FFF4E3', '#E3FFE3', '#F9E6FF',
@@ -72,13 +75,25 @@ export default function Tarefa({ navigation }: Props) {
           />
 
           <Text style={styles.label}>Horário:</Text>
-          <CustomInput 
-            value={data.toLocaleTimeString()}
-            onChangeText={(text) => setData(new Date(`2023-01-01T${text}:00`))}
-            placeholder="Digite o horário"
-            placeholderTextColor="#aaa"
-            keyboardType="default"
-          />
+            <TouchableOpacity
+                style={styles.timePicker}
+                onPress={() => setTimePickerVisible(true)}
+              >
+                <Text style={styles.timeText}>
+                  {data.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </TouchableOpacity>
+
+              <DateTimePickerModal
+                isVisible={isTimePickerVisible}
+                mode="time"
+                date={data}
+                onConfirm={(selectedTime) => {
+                  setData(selectedTime);
+                  setTimePickerVisible(false);
+                }}
+                onCancel={() => setTimePickerVisible(false)}
+              />
 
           <Text style={styles.label}>Cor:</Text>
           <View style={styles.colorPalette}>
