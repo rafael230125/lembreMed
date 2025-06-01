@@ -17,6 +17,7 @@ import { RootStackParamList } from '../components/Navigation';
 import { getAuth } from "firebase/auth";
 import { query, where } from '../services/firebaseConfig';
 import { deleteDoc, doc } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 
 const { width, height } = Dimensions.get('window');
@@ -62,9 +63,9 @@ export default function Home({ navigation }: Props) {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'tarefas', id));
+      await deleteDoc(doc(db, 'medicamentos', id));
       setMedicamentos((prev) => prev.filter((tarefa) => tarefa.id !== id));
-      Alert.alert('Sucesso', 'Lembrete concluído com sucesso!');
+      Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
       console.error(error);
@@ -78,8 +79,14 @@ export default function Home({ navigation }: Props) {
       </View>
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
-        <Text style={styles.cardTime}>{item.horario}</Text>
+        <Text style={styles.cardTime}>{item.dataHoraInicio
+        ? format(new Date(item.dataHoraInicio), 'dd/MM/yyyy HH:mm')
+        : ''
+        }</Text>
       </View>
+    <TouchableOpacity onPress={() => handleDelete(item.id)}>
+    <Ionicons name="trash" size={20} color="#000" />
+    </TouchableOpacity>
     </TouchableOpacity>
   );
 
