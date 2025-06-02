@@ -24,12 +24,32 @@ export default function Cadastro({ navigation }: Props) {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [emailError, setEmailError] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
 
-  const handleCadastro = async () => {
-    if (!email || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
-      return;
+
+  const validarCampos = (): boolean => {
+    let valido = true
+    setEmailError('');
+    setPasswordError('');
+
+   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      setEmailError('Digite um email válido.');
+      valido = false;
     }
+
+    if (password.length < 6) {
+      setPasswordError('A senha deve conter pelo menos 6 caracteres.');
+      valido = false;
+    }
+
+    return valido;
+  }
+  
+  const handleCadastro = async () => {
+    if (!validarCampos()) return;
 
     try {
       setIsLoading(true);
@@ -52,6 +72,7 @@ export default function Cadastro({ navigation }: Props) {
     }
   };
 
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.outerContainer}>
@@ -62,13 +83,17 @@ export default function Cadastro({ navigation }: Props) {
               resizeMode="contain"
             />
           <Text style={styles.subtitle}>Crie uma conta</Text>  
-          <CustomInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            placeholderTextColor="#aaa"
-            keyboardType="email-address"
-          />
+          <View style={styles.inputWrapper}>
+            <CustomInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+              placeholderTextColor="#aaa"
+              keyboardType="email-address"
+            />
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+          </View>
+         <View style={styles.inputWrapper}>
           <CustomInput
             value={password}
             onChangeText={setPassword}
@@ -76,6 +101,10 @@ export default function Cadastro({ navigation }: Props) {
             placeholderTextColor="#aaa"
             secureTextEntry
           />
+
+           {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+            </View>
+
           {isLoading ? (
             <ActivityIndicator size="large" color="#68BAE8" />
           ) : (
@@ -152,4 +181,16 @@ const styles = StyleSheet.create({
     fontSize: width * 0.04, 
     textAlign: 'center',
   },
+ inputWrapper: {
+  width: '100%',
+  alignItems: 'flex-start',
+  marginBottom: 10,
+},
+
+  errorText: {
+  color: 'red',
+  fontSize: 14,
+  marginBottom: 10,
+  marginLeft: 8,
+},
 });

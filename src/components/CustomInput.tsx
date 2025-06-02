@@ -17,6 +17,7 @@ export default function CustomInput({
   placeholderTextColor,
   secureTextEntry = false,
   keyboardType = 'default',
+  
 }: CustomInputProps) {
   return (
     <View style={styles.inputContainer}>
@@ -29,6 +30,7 @@ export default function CustomInput({
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize="none"
+        
       />
     </View>
   );
