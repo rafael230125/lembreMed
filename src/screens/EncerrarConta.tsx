@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import { RadioButton, Provider as PaperProvider } from 'react-native-paper'; 
-import CustomButton from '../components/CustomButton'; 
+import { RadioButton, Provider as PaperProvider } from 'react-native-paper';
+import CustomButton from '../components/CustomButton';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../components/Navigation';
-import { getAuth, deleteUser } from 'firebase/auth'; 
-import { getFirestore, doc, deleteDoc } from 'firebase/firestore'; 
+import { getAuth, deleteUser } from 'firebase/auth';
+import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
 
 const { width, height } = Dimensions.get('window');
 
@@ -16,18 +16,18 @@ type Props = {
 };
 
 export default function EncerrarConta({ navigation }: Props) {
-  const [checked, setChecked] = useState(''); 
-  //const auth = getAuth();
-  //const firestore = getFirestore();
+  const [checked, setChecked] = useState('');
+  const auth = getAuth();
+  const firestore = getFirestore();
 
   const theme = {
     colors: {
-      primary: '#696868', 
+      primary: '#696868',
     },
   };
 
   const handleEncerrarConta = async () => {
-     {/* 
+
     if (!checked) {
       Alert.alert('Erro', 'Selecione um motivo para encerrar a conta.');
       return;
@@ -43,16 +43,16 @@ export default function EncerrarConta({ navigation }: Props) {
         await deleteUser(user);
 
         Alert.alert('Conta encerrada', 'Sua conta foi encerrada com sucesso.');
-        navigation.navigate('Login'); 
+        navigation.navigate('Login');
       } else {
         Alert.alert('Erro', 'Nenhum usuário autenticado encontrado.');
       }
     } catch (error: any) {
       Alert.alert('Erro', 'Não foi possível encerrar a conta. Tente novamente.');
     }
-    */}
 
-    navigation.navigate('EncerramentoConta'); 
+
+    navigation.navigate('EncerramentoConta');
   };
 
   return (
@@ -101,8 +101,8 @@ export default function EncerrarConta({ navigation }: Props) {
         </View>
 
         <View style={styles.buttonContainer}>
-          <CustomButton 
-            title="Encerrar conta" 
+          <CustomButton
+            title="Encerrar conta"
             onPress={handleEncerrarConta}
             style={styles.customButton} />
         </View>
@@ -114,7 +114,7 @@ export default function EncerrarConta({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.07, 
+    paddingHorizontal: width * 0.07,
     paddingTop: height * 0.05,
     backgroundColor: '#fff',
   },
@@ -123,15 +123,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   optionsContainer: {
-    marginVertical: height * 0.02, 
+    marginVertical: height * 0.02,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: height * 0.02, 
+    marginBottom: height * 0.02,
   },
   optionText: {
-    marginLeft: width * 0.03, 
+    marginLeft: width * 0.03,
     fontSize: width * 0.04,
   },
   buttonContainer: {
