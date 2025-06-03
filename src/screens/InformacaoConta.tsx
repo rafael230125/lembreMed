@@ -8,6 +8,9 @@ import { RootStackParamList } from '../components/Navigation';
 import { useUserContext } from '../context/UserContext';
 import { db } from '../services/firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
+import { MaskedTextInput } from 'react-native-mask-text';
+import { TextInput } from 'react-native';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -71,27 +74,32 @@ export default function InformacaoConta({ navigation }: Props) {
             />
           </TouchableOpacity>
           <Text style={styles.titleSub}>Nome:</Text>
-          <CustomInput
+          <TextInput
+            style={styles.input}
+            placeholder="Nome"
             value={name}
             onChangeText={setName}
-            placeholder="Seu nome"
-            placeholderTextColor="#aaa"
           />
           <Text style={styles.titleSub}>Data de nascimento:</Text>
-          <CustomInput
-            value={birthDate}
-            onChangeText={setBirthDate}
-            placeholder="Sua data de nascimento"
-            placeholderTextColor="#aaa"
-          />
+            <MaskedTextInput
+              mask="99/99/9999"
+              onChangeText={(text, rawText) => setBirthDate(rawText)}
+              value={birthDate}
+              keyboardType="numeric"
+              placeholder="DD/MM/AAAA"
+              style={styles.input}
+            />
+
           <Text style={styles.titleSub}>Telefone:</Text>
-          <CustomInput
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Seu telefone"
-            placeholderTextColor="#aaa"
-            keyboardType="phone-pad"
-          />
+            <MaskedTextInput
+              mask="(99) 99999-9999"
+              onChangeText={(text, rawText) => setPhone(rawText)}
+              value={phone}
+              keyboardType="numeric"
+              placeholder="(00) 00000-0000"
+              style={styles.input}
+            />
+
           <CustomButton title="Salvar" onPress={handleSave} />
         </View>
       </View>
@@ -144,4 +152,13 @@ const styles = StyleSheet.create({
   radioText: {
     fontSize: width * 0.035,
   },
+  input: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    fontSize: 16,
+    paddingVertical: 10,
+    marginBottom: 20,
+  },
 });
+
