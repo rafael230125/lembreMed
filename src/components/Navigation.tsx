@@ -9,6 +9,7 @@ import MeuPerfil from '../screens/MeuPerfil';
 import EncerrarConta from '../screens/EncerrarConta';
 import EncerramentoConta from '../screens/EncerramentoConta';
 import InformacaoConta from '../screens/InformacaoConta';
+import EditarMedicamento from '../screens/EditarMedicamento';
 import TabNavigation from './TabNavigation';
 import { RootStackParamList } from '../types/types';
 
@@ -20,100 +21,118 @@ const Navigation = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen 
-          name="Login" 
-          component={Login} 
-          options={{ headerShown: false }} 
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="Cadastro" 
-          component={Cadastro} 
-          options={{ 
-            headerShown: false,
-            headerTitle: '', 
-          }} 
-        />
-        <Stack.Screen 
-          name="InformacaoConta" 
-          component={InformacaoConta} 
+        <Stack.Screen
+          name="Cadastro"
+          component={Cadastro}
           options={{
-            headerShown: true, 
+            headerShown: false,
+            headerTitle: '',
+          }}
+        />
+        <Stack.Screen
+          name="InformacaoConta"
+          component={InformacaoConta}
+          options={{
+            headerShown: true,
             headerStyle: {
-              elevation: 0, 
-              shadowOpacity: 0, 
-              borderBottomWidth: 0, 
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
             },
             headerTitle: 'Informações conta',
-            headerTitleAlign: 'center',  
+            headerTitleAlign: 'center',
             headerTitleStyle: {
               fontSize: width * 0.05,
               fontWeight: 'bold',
             },
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="Main" 
-          component={TabNavigation} 
-          options={{ headerShown: false }} 
+        <Stack.Screen
+          name="Main"
+          component={TabNavigation}
+          options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="Configuracao" 
-          component={Configuracao} 
+        <Stack.Screen
+          name="Configuracao"
+          component={Configuracao}
           options={{
-            headerShown: true, 
+            headerShown: true,
             headerStyle: {
-              elevation: 0, 
-              shadowOpacity: 0, 
-              borderBottomWidth: 0, 
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
             },
             headerTitle: 'Configuração',
-            headerTitleAlign: 'center',  
+            headerTitleAlign: 'center',
             headerTitleStyle: {
               fontSize: width * 0.05,
               fontWeight: 'bold',
             },
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="MeuPerfil" 
-          component={MeuPerfil} 
+        <Stack.Screen
+          name="MeuPerfil"
+          component={MeuPerfil}
           options={{
-            headerShown: true, 
+            headerShown: true,
             headerStyle: {
-              elevation: 0, 
-              shadowOpacity: 0, 
-              borderBottomWidth: 0, 
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
             },
             headerTitle: 'Meu perfil',
-            headerTitleAlign: 'center',  
+            headerTitleAlign: 'center',
             headerTitleStyle: {
               fontSize: width * 0.05,
               fontWeight: 'bold',
             },
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="EncerrarConta" 
-          component={EncerrarConta} 
+        <Stack.Screen
+          name="EncerrarConta"
+          component={EncerrarConta}
           options={{
-            headerShown: true, 
+            headerShown: true,
             headerStyle: {
-              elevation: 0, 
-              shadowOpacity: 0, 
-              borderBottomWidth: 0, 
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
             },
             headerTitle: 'Encerrar conta',
-            headerTitleAlign: 'center',  
+            headerTitleAlign: 'center',
             headerTitleStyle: {
               fontSize: width * 0.05,
               fontWeight: 'bold',
             },
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="EncerramentoConta" 
-          component={EncerramentoConta} 
-          options={{ headerShown: false }} 
+        <Stack.Screen
+          name="EncerramentoConta"
+          component={EncerramentoConta}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EditarMedicamento"
+          component={EditarMedicamento}
+          options={{
+            headerShown: true,
+            headerStyle: {
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTitle: '',
+            headerTitleAlign: 'center',
+            headerTitleStyle: {
+              fontSize: width * 0.05,
+              fontWeight: 'bold',
+            },
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>

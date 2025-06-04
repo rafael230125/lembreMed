@@ -4,23 +4,23 @@ import Home from '../screens/Home';
 import AdicionarMedicamento from '../screens/AdicionarMedicamento';
 import Perfil from '../screens/Perfil';
 import { Ionicons } from '@expo/vector-icons';
-import { TabParamList } from '../types/types'; 
+import { TabParamList } from '../types/types';
 
-const Tab = createBottomTabNavigator<TabParamList>(); 
+const Tab = createBottomTabNavigator<TabParamList>();
 
 const TabNavigation = () => {
   return (
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: {
-            borderTopWidth: 0,        
-          },
-          tabBarActiveTintColor: '#70C4E8',
-          tabBarInactiveTintColor: '#e0e0e0',
-          tabBarShowLabel: false,  
-        }}
-      >
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          borderTopWidth: 0,
+        },
+        tabBarActiveTintColor: '#70C4E8',
+        tabBarInactiveTintColor: '#e0e0e0',
+        tabBarShowLabel: false,
+      }}
+    >
       <Tab.Screen
         name="Home"
         component={Home}
