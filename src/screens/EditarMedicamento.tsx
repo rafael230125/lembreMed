@@ -51,15 +51,12 @@ export default function EditarMedicamento({ navigation }: Props) {
 
   const [dataHoraInicio, setDataHoraInicio] = useState<Date>(dataHora);
 
-  const [data, setData] = useState(new Date());
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [imagem, setImagem] = useState<string | null>(null);
   const [isImageOptionsVisible, setImageOptionsVisible] = useState(false);
-
   const [isFreqInputVisible, setFreqInputVisible] = useState(false);
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
-
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -111,11 +108,10 @@ export default function EditarMedicamento({ navigation }: Props) {
       const user = getAuth().currentUser;
 
       if (!user) {
-        Alert.alert('Erro', 'Você precisa estar autenticado para salvar uma tarefa.');
+        Alert.alert('Erro', 'Você precisa estar autenticado para salvar um lembrete.');
         return;
       }
 
-      // Validação básica
       if (!titulo.trim()) {
         Alert.alert('Erro', 'Digite o nome do medicamento.');
         return;
@@ -126,22 +122,16 @@ export default function EditarMedicamento({ navigation }: Props) {
         return;
       }
 
-      // Juntar dataHoraInicio com a hora selecionada (data)
-      const dataInicio = new Date(dataHoraInicio);
-      dataInicio.setHours(data.getHours());
-      dataInicio.setMinutes(data.getMinutes());
-      dataInicio.setSeconds(0);
-      dataInicio.setMilliseconds(0);
+      const medicamentoDocRef = doc(db, 'medicamentos', medicamento.id);
 
-      // Reseta os campos
-      setTitulo('');
-      setFrequenciaTipo('diaria');
-      setFrequenciaQuantidade(1);
-      setDiasSemanaSelecionados([]);
-      setCor('#ffffff');
-      setData(new Date());
-      setImagem(null);
-      setDataHoraInicio(new Date());
+      await updateDoc(medicamentoDocRef, {
+        titulo: titulo,
+        cor: cor,
+        dataHoraInicio: dataHoraInicio.toISOString(),
+        diasSemanaSelecionados: diasSemanaSelecionados,
+        frequenciaQuantidade: frequenciaQuantidade,
+        frequenciaTipo: frequenciaTipo,
+      });
 
       Alert.alert('Sucesso', 'Lembrete salvo com sucesso!');
       navigation.goBack();
@@ -183,7 +173,7 @@ export default function EditarMedicamento({ navigation }: Props) {
             style={styles.info}
             onPress={() => setDatePickerVisible(true)}
           >
-            <Text>{dataHoraInicio.toLocaleDateString()}</Text>
+            <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
           </TouchableOpacity>
 
           <DateTimePickerModal
@@ -203,16 +193,16 @@ export default function EditarMedicamento({ navigation }: Props) {
             onPress={() => setTimePickerVisible(true)}
           >
             <Text style={styles.timeText}>
-              {data.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {dataHoraInicio.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </TouchableOpacity>
 
           <DateTimePickerModal
             isVisible={isTimePickerVisible}
             mode="time"
-            date={data}
+            date={dataHoraInicio}
             onConfirm={(selectedTime) => {
-              setData(selectedTime);
+              setDataHoraInicio(selectedTime);
               setTimePickerVisible(false);
             }}
             onCancel={() => setTimePickerVisible(false)}
