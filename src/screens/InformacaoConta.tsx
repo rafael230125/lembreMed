@@ -11,7 +11,6 @@ import { doc, setDoc } from 'firebase/firestore';
 import { MaskedTextInput } from 'react-native-mask-text';
 import { TextInput } from 'react-native';
 
-
 const { width, height } = Dimensions.get('window');
 
 type InformacaoContaScreenNavigationProp = StackNavigationProp<RootStackParamList, 'InformacaoConta'>;

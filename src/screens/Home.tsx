@@ -17,13 +17,20 @@ import { getAuth } from "firebase/auth";
 import { query, where } from '../services/firebaseConfig';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { TabParamList, RootStackParamList } from '../types/types';
+
+type HomeNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Home'>,
+  StackNavigationProp<RootStackParamList>
+>;
+
+type Props = {
+  navigation: HomeNavigationProp;
+};
 
 const { width, height } = Dimensions.get('window');
-
-import { TabParamList } from '../types/types';
-
-type Props = BottomTabScreenProps<TabParamList, 'Home'>;
 
 export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
@@ -73,7 +80,7 @@ export default function Home({ navigation }: Props) {
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: item.cor }]}
-      onPress={() => navigation.navigate('AdicionarMedicamento')}
+      onPress={() => navigation.navigate('EditarMedicamento', { medicamento: item })}
     >
       <View style={styles.cardIcon}>
       </View>
@@ -94,7 +101,6 @@ export default function Home({ navigation }: Props) {
         <Ionicons name="trash" size={20} color="#000" />
       </TouchableOpacity>
     </TouchableOpacity>
-
   );
 
   return (

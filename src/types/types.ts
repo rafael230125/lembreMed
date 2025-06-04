@@ -8,6 +8,7 @@ export type RootStackParamList = {
   EncerramentoConta: undefined;
   InformacaoConta: undefined;
   Main: undefined;
+  EditarMedicamento: { medicamento: Medicamento };
 };
 
 export type TabParamList = {
@@ -22,4 +23,15 @@ export type Lembrete = {
   cor: string;
   icone: string;
   concluido: boolean;
+};
+
+export type Medicamento = {
+  id: string;
+  titulo: string;
+  cor: string;
+  dataHoraInicio: string;
+  userId: string;
+  diasSemanaSelecionados: string;
+  frequenciaQuantidade: number;
+  frequenciaTipo: string;
 };
