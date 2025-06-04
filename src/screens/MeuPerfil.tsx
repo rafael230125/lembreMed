@@ -8,12 +8,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '../services/firebaseConfig';
+import { RootStackParamList } from '../types/types';
 
 const { width, height } = Dimensions.get('window');
 
-type MeuPerfilScreenNavigationProp = StackNavigationProp<{
-  Main: undefined;
-}>;
+type MeuPerfilScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MeuPerfil'>;
 
 type Props = {
   navigation: MeuPerfilScreenNavigationProp;

@@ -4,29 +4,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Login from '../screens/Login';
 import Cadastro from '../screens/Cadastro';
-import Perfil from '../screens/Perfil';
 import Configuracao from '../screens/Configuracao';
 import MeuPerfil from '../screens/MeuPerfil';
 import EncerrarConta from '../screens/EncerrarConta';
 import EncerramentoConta from '../screens/EncerramentoConta';
 import InformacaoConta from '../screens/InformacaoConta';
 import TabNavigation from './TabNavigation';
-import Home from '../screens/Home';
-import AdicionarMedicamento from '../screens/AdicionarMedicamento';
-
-export type RootStackParamList = {
-  Login: undefined;
-  Cadastro: undefined;
-  Perfil: undefined;
-  Configuracao: undefined;
-  MeuPerfil: undefined;
-  EncerrarConta: undefined;
-  EncerramentoConta: undefined;
-  InformacaoConta: undefined;
-  Main: undefined; 
-  Home: undefined; 
-  AdicionarMedicamento: undefined; 
-};
+import { RootStackParamList } from '../types/types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
