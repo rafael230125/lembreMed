@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type RootStackParamList = {
   Tarefa: { lembrete?: Lembrete };
   Login: undefined;
@@ -29,9 +31,9 @@ export type Medicamento = {
   id: string;
   titulo: string;
   cor: string;
-  dataHoraInicio: string;
+  dataHoraInicio: string; 
   userId: string;
-  diasSemanaSelecionados: string;
+  diasSemanaSelecionados: number[];    
   frequenciaQuantidade: number;
   frequenciaTipo: string;
 };

@@ -105,7 +105,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       dataInicio.setSeconds(0);
       dataInicio.setMilliseconds(0);
 
-      // Adiciona a tarefa no Firestore
       await addDoc(collection(db, "medicamentos"), {
         titulo: titulo,
         dataHoraInicio: dataInicio.toISOString(),
@@ -168,7 +167,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             style={styles.info}
             onPress={() => setDatePickerVisible(true)}
           >
-            <Text>{dataHoraInicio.toLocaleDateString()}</Text>
+            <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
           </TouchableOpacity>
 
           <DateTimePickerModal
