@@ -13,20 +13,17 @@ import { Ionicons } from '@expo/vector-icons';
 import SearchBar from '../components/SearchBar';
 import { db, collection, getDocs } from '../services/firebaseConfig';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../components/Navigation';
 import { getAuth } from "firebase/auth";
 import { query, where } from '../services/firebaseConfig';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
-
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 const { width, height } = Dimensions.get('window');
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+import { TabParamList } from '../types/types';
 
-type Props = {
-  navigation: HomeScreenNavigationProp;
-};
+type Props = BottomTabScreenProps<TabParamList, 'Home'>;
 
 export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
@@ -74,7 +71,10 @@ export default function Home({ navigation }: Props) {
 
 
   const renderItem = ({ item }: any) => (
-    <TouchableOpacity style={[styles.card, { backgroundColor: item.cor }]}>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: item.cor }]}
+      onPress={() => navigation.navigate('AdicionarMedicamento')}
+    >
       <View style={styles.cardIcon}>
       </View>
       <View style={styles.cardText}>
@@ -84,10 +84,17 @@ export default function Home({ navigation }: Props) {
           : ''
         }</Text>
       </View>
-      <TouchableOpacity onPress={() => handleDelete(item.id)}>
+
+      <TouchableOpacity
+        onPress={(event) => {
+          event.stopPropagation();
+          handleDelete(item.id);
+        }}
+      >
         <Ionicons name="trash" size={20} color="#000" />
       </TouchableOpacity>
     </TouchableOpacity>
+
   );
 
   return (

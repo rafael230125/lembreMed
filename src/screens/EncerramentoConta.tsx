@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, Dimensions } from 'react-native';
 import CustomButton from '../components/CustomButton'; 
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../components/Navigation';
+import { RootStackParamList } from '../types/types';
 
 const { width, height } = Dimensions.get('window');
 

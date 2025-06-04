@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, ScrollView
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../components/Navigation';
+import { RootStackParamList } from '../types/types';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../services/firebaseConfig';
 import { useUserContext } from '../context/UserContext';

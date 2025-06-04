@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../components/Navigation';
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { db } from '../services/firebaseConfig';
@@ -11,17 +9,14 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 import Modal from 'react-native-modal';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { TabParamList } from '../types/types';
 
+type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
 
 const { width, height } = Dimensions.get('window');
 
-type AdicionarMedicamentoScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AdicionarMedicamento'>;
-
-type Props = {
-  navigation: AdicionarMedicamentoScreenNavigationProp;
-};
-
-export default function Tarefa({ navigation }: Props) {
+export default function AdicionarMedicamento({ navigation }: Props) {
   const [titulo, setTitulo] = useState('');
   const [cor, setCor] = useState('#ffffff');
   const [data, setData] = useState(new Date());

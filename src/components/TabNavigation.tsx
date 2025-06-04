@@ -1,11 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from '../screens/Home';
-import Tarefa from '../screens/AdicionarMedicamento';
+import AdicionarMedicamento from '../screens/AdicionarMedicamento';
 import Perfil from '../screens/Perfil';
 import { Ionicons } from '@expo/vector-icons';
+import { TabParamList } from '../types/types'; 
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<TabParamList>(); 
 
 const TabNavigation = () => {
   return (
@@ -30,8 +31,8 @@ const TabNavigation = () => {
         }}
       />
       <Tab.Screen
-        name="Tarefa"
-        component={Tarefa}
+        name="AdicionarMedicamento"
+        component={AdicionarMedicamento}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle" size={size} color={color} />

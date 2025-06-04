@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'rea
 import { RadioButton, Provider as PaperProvider } from 'react-native-paper';
 import CustomButton from '../components/CustomButton';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../components/Navigation';
+import { RootStackParamList } from '../types/types';
 import { getAuth, deleteUser } from 'firebase/auth';
 import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
 
