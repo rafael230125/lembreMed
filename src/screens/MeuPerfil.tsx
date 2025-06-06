@@ -49,14 +49,15 @@ export default function MeuPerfil({ navigation }: Props) {
 
   function formatarData(data: string) {
   if (data.length === 8) {
-    return ${data.substring(0, 2)}/${data.substring(2, 4)}/${data.substring(4)};
+    return `(${data.substring(0, 2)}/${data.substring(2, 4)}/${data.substring(4)}`;
   }
   return data;
 }
 
   function formatarTelefone(telefone: string) {
     if (telefone.length === 11) {
-      return (${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)};
+      return `(${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)}`;
+
     }
     return telefone;
   }
