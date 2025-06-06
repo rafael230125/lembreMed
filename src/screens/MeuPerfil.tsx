@@ -8,6 +8,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '../services/firebaseConfig';
+import { MaskedTextInput } from 'react-native-mask-text';
+import { TextInput } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -44,6 +46,21 @@ export default function MeuPerfil({ navigation }: Props) {
     }
   };
 
+  function formatarData(data: string) {
+  if (data.length === 8) {
+    return `${data.substring(0, 2)}/${data.substring(2, 4)}/${data.substring(4)}`;
+  }
+  return data;
+}
+
+  function formatarTelefone(telefone: string) {
+    if (telefone.length === 11) {
+      return `(${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)}`;
+    }
+    return telefone;
+  }
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -53,7 +70,7 @@ export default function MeuPerfil({ navigation }: Props) {
         if (docSnap.exists()) {
           const userData = docSnap.data();
           setNome(userData.name || '');
-          setTelefone(userData.phone || '');
+          setTelefone(formatarTelefone(userData.phone || ''));
           setDataNascimento(userData.birthDate || '');
         }
       } else {
@@ -107,7 +124,8 @@ export default function MeuPerfil({ navigation }: Props) {
         </View>
         <View style={styles.formContainer}>
           <Text style={styles.label}>Nome</Text>
-          <CustomInput
+          <TextInput
+            style={styles.input}
             value={nome}
             placeholder="Nome"
             placeholderTextColor="#aaa"
@@ -115,18 +133,22 @@ export default function MeuPerfil({ navigation }: Props) {
           />
 
           <Text style={styles.label}>Telefone</Text>
-          <CustomInput
+          <MaskedTextInput
+            mask="(99) 99999-9999"
+            onChangeText={(masked, unmasked) => setTelefone(unmasked)}
             value={telefone}
-            placeholder="Telefone"
-            placeholderTextColor="#aaa"
-            onChangeText={(text) => setTelefone(text)}
+            keyboardType="numeric"
+            style={styles.input}
+            placeholder='(00) 00000-0000'
           />
           <Text style={styles.label}>Data de Nascimento</Text>
-          <CustomInput
+          <MaskedTextInput
+            mask="99/99/9999"
+            onChangeText={(masked, unmasked) => setDataNascimento(unmasked)}
             value={dataNascimento}
-            placeholder="Data de nascimento"
-            placeholderTextColor="#aaa"
-            onChangeText={(text) => setDataNascimento(text)}
+            keyboardType="numeric"
+            style={styles.input}
+            placeholder='DD/MM/AAAA'
           />
         </View>
 
@@ -179,5 +201,13 @@ const styles = StyleSheet.create({
     marginTop: height * 0.05,
     marginBottom: height * 0.1,
     alignSelf: 'center',
+  },
+    input: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    fontSize: 16,
+    paddingVertical: 10,
+    marginBottom: 20,
   },
 });

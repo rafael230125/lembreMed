@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Dimensions, ScrollView, Alert, TouchableOpacity
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as ImagePicker from 'expo-image-picker';
 import CustomButton from '../components/CustomButton';
-import CustomInput from '../components/CustomInput';
 import { RootStackParamList } from '../components/Navigation';
 import { useUserContext } from '../context/UserContext';
 import { db } from '../services/firebaseConfig';
