@@ -17,6 +17,7 @@ const { width, height } = Dimensions.get('window');
 type MeuPerfilScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MeuPerfil'>;
 
 type Props = {
+  
   navigation: MeuPerfilScreenNavigationProp;
 };
 
