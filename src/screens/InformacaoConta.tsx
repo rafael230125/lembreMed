@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, Dimensions, ScrollView, Alert, TouchableOpacity
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as ImagePicker from 'expo-image-picker';
 import CustomButton from '../components/CustomButton';
-import { RootStackParamList } from '../components/Navigation';
+import CustomInput from '../components/CustomInput';
+import { RootStackParamList } from '../types/types';
 import { useUserContext } from '../context/UserContext';
 import { db } from '../services/firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
 import { MaskedTextInput } from 'react-native-mask-text';
 import { TextInput } from 'react-native';
-
 
 const { width, height } = Dimensions.get('window');
 

@@ -1,37 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
-import { db } from '../services/firebaseConfig';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { auth, db } from '../services/firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 import Modal from 'react-native-modal';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { TabParamList } from '../types/types';
-
-type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
+import { RootStackParamList } from '../types/types';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 
 const { width, height } = Dimensions.get('window');
 
-export default function AdicionarMedicamento({ navigation }: Props) {
-  const [titulo, setTitulo] = useState('');
-  const [cor, setCor] = useState('#ffffff');
-  const [data, setData] = useState(new Date());
+import { useRoute, RouteProp } from '@react-navigation/native';
+
+type EditarMedicamentoNavigationProp = StackNavigationProp<RootStackParamList, 'EditarMedicamento'>;
+
+type EditarMedicamentoRouteProp = RouteProp<RootStackParamList, 'EditarMedicamento'>;
+
+type Props = {
+  navigation: EditarMedicamentoNavigationProp;
+};
+
+export default function EditarMedicamento({ navigation }: Props) {
+  const route = useRoute<EditarMedicamentoRouteProp>();
+  const { medicamento } = route.params;
+  const [titulo, setTitulo] = useState(medicamento?.titulo || '');
+  const [cor, setCor] = useState(medicamento?.cor || '#ffffff');
+
+  const [frequenciaTipo, setFrequenciaTipo] = useState<'diaria' | 'hora' | 'semana'>(
+    (medicamento?.frequenciaTipo as 'diaria' | 'hora' | 'semana') || 'diaria'
+  );
+
+
+  const [diasSemanaSelecionados, setDiasSemanaSelecionados] = useState<number[]>(
+    Array.isArray(medicamento?.diasSemanaSelecionados)
+      ? medicamento.diasSemanaSelecionados
+      : []
+  );
+
+  const [frequenciaQuantidade, setFrequenciaQuantidade] = useState<number>(
+    medicamento?.frequenciaQuantidade ?? 1
+  );
+
+  const dataHora = medicamento?.dataHoraInicio
+    ? new Date(medicamento.dataHoraInicio)
+    : new Date();
+
+  const [dataHoraInicio, setDataHoraInicio] = useState<Date>(dataHora);
+
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [imagem, setImagem] = useState<string | null>(null);
   const [isImageOptionsVisible, setImageOptionsVisible] = useState(false);
-  const [frequenciaTipo, setFrequenciaTipo] = useState<'diaria' | 'hora' | 'semana'>('diaria');
-  const [frequenciaQuantidade, setFrequenciaQuantidade] = useState<number>(1);
-  const [diasSemanaSelecionados, setDiasSemanaSelecionados] = useState<number[]>([]);
-  const [dataHoraInicio, setDataHoraInicio] = useState(new Date());
   const [isFreqInputVisible, setFreqInputVisible] = useState(false);
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
-
-
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -83,11 +108,10 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       const user = getAuth().currentUser;
 
       if (!user) {
-        Alert.alert('Erro', 'Você precisa estar autenticado para salvar uma tarefa.');
+        Alert.alert('Erro', 'Você precisa estar autenticado para salvar um lembrete.');
         return;
       }
 
-      // Validação básica
       if (!titulo.trim()) {
         Alert.alert('Erro', 'Digite o nome do medicamento.');
         return;
@@ -98,32 +122,16 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         return;
       }
 
-      // Juntar dataHoraInicio com a hora selecionada (data)
-      const dataInicio = new Date(dataHoraInicio);
-      dataInicio.setHours(data.getHours());
-      dataInicio.setMinutes(data.getMinutes());
-      dataInicio.setSeconds(0);
-      dataInicio.setMilliseconds(0);
+      const medicamentoDocRef = doc(db, 'medicamentos', medicamento.id);
 
-      await addDoc(collection(db, "medicamentos"), {
+      await updateDoc(medicamentoDocRef, {
         titulo: titulo,
-        dataHoraInicio: dataInicio.toISOString(),
-        frequenciaTipo,
-        frequenciaQuantidade,
-        diasSemanaSelecionados,
         cor: cor,
-        userId: user.uid,
+        dataHoraInicio: dataHoraInicio.toISOString(),
+        diasSemanaSelecionados: diasSemanaSelecionados,
+        frequenciaQuantidade: frequenciaQuantidade,
+        frequenciaTipo: frequenciaTipo,
       });
-
-      // Reseta os campos
-      setTitulo('');
-      setFrequenciaTipo('diaria');
-      setFrequenciaQuantidade(1);
-      setDiasSemanaSelecionados([]);
-      setCor('#ffffff');
-      setData(new Date());
-      setImagem(null);
-      setDataHoraInicio(new Date());
 
       Alert.alert('Sucesso', 'Lembrete salvo com sucesso!');
       navigation.goBack();
@@ -152,8 +160,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.outerContainer}>
         <View style={styles.container}>
-          <Text style={styles.title}>Adicionar medicamento</Text>
-
           <Text style={styles.label}>Nome:</Text>
           <CustomInput
             value={titulo}
@@ -187,16 +193,16 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             onPress={() => setTimePickerVisible(true)}
           >
             <Text style={styles.timeText}>
-              {data.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {dataHoraInicio.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </TouchableOpacity>
 
           <DateTimePickerModal
             isVisible={isTimePickerVisible}
             mode="time"
-            date={data}
+            date={dataHoraInicio}
             onConfirm={(selectedTime) => {
-              setData(selectedTime);
+              setDataHoraInicio(selectedTime);
               setTimePickerVisible(false);
             }}
             onCancel={() => setTimePickerVisible(false)}
@@ -349,13 +355,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     backgroundColor: '#fff',
-    marginTop: height * 0.07,
-  },
-  title: {
-    fontSize: width * 0.05,
-    fontWeight: 'bold',
-    marginBottom: height * 0.04,
-    textAlign: 'center',
+    marginTop: height * 0.01,
   },
   label: {
     fontSize: 16,
@@ -468,6 +468,7 @@ const styles = StyleSheet.create({
   freqBtn: {
     paddingVertical: 10,
     paddingHorizontal: 15,
+
     borderRadius: 5,
     marginRight: 10,
     marginBottom: 10,

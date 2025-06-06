@@ -5,15 +5,19 @@ import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { auth, db } from '../services/firebaseConfig';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
-type PerfilScreenNavigationProp = StackNavigationProp<{
-  Configuracao: undefined;
-  MeuPerfil: undefined;
-  Login: undefined;
-}>;
+import { TabParamList, RootStackParamList } from '../types/types';
+
+type PerfilNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Perfil'>,
+  StackNavigationProp<RootStackParamList>
+>;
 
 type Props = {
-  navigation: PerfilScreenNavigationProp;
+  navigation: PerfilNavigationProp;
 };
 
 const { width, height } = Dimensions.get('window');
@@ -22,7 +26,7 @@ export default function Perfil({ navigation }: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [nome, setNome] = useState('teste');
   const [email, setEmail] = useState('teste@email.com');
-  const userProfileImage  =  'sem foto';
+  const userProfileImage = 'sem foto';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {

@@ -13,20 +13,24 @@ import { Ionicons } from '@expo/vector-icons';
 import SearchBar from '../components/SearchBar';
 import { db, collection, getDocs } from '../services/firebaseConfig';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../components/Navigation';
 import { getAuth } from "firebase/auth";
 import { query, where } from '../services/firebaseConfig';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { TabParamList, RootStackParamList } from '../types/types';
 
-
-const { width, height } = Dimensions.get('window');
-
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type HomeNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Home'>,
+  StackNavigationProp<RootStackParamList>
+>;
 
 type Props = {
-  navigation: HomeScreenNavigationProp;
+  navigation: HomeNavigationProp;
 };
+
+const { width, height } = Dimensions.get('window');
 
 export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
@@ -74,19 +78,28 @@ export default function Home({ navigation }: Props) {
 
 
   const renderItem = ({ item }: any) => (
-    <TouchableOpacity style={[styles.card, { backgroundColor: item.cor }]}>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: item.cor }]}
+      onPress={() => navigation.navigate('EditarMedicamento', { medicamento: item })}
+    >
       <View style={styles.cardIcon}>
       </View>
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
         <Text style={styles.cardTime}>{item.dataHoraInicio
-        ? format(new Date(item.dataHoraInicio), 'dd/MM/yyyy HH:mm')
-        : ''
+          ? format(new Date(item.dataHoraInicio), 'dd/MM/yyyy HH:mm')
+          : ''
         }</Text>
       </View>
-    <TouchableOpacity onPress={() => handleDelete(item.id)}>
-    <Ionicons name="trash" size={20} color="#000" />
-    </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={(event) => {
+          event.stopPropagation();
+          handleDelete(item.id);
+        }}
+      >
+        <Ionicons name="trash" size={20} color="#000" />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 

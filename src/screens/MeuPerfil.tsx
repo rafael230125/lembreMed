@@ -10,6 +10,7 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '../services/firebaseConfig';
 import { MaskedTextInput } from 'react-native-mask-text';
 import { TextInput } from 'react-native';
+import { RootStackParamList } from '../types/types';
 
 const { width, height } = Dimensions.get('window');
 
@@ -48,14 +49,14 @@ export default function MeuPerfil({ navigation }: Props) {
 
   function formatarData(data: string) {
   if (data.length === 8) {
-    return `${data.substring(0, 2)}/${data.substring(2, 4)}/${data.substring(4)}`;
+    return ${data.substring(0, 2)}/${data.substring(2, 4)}/${data.substring(4)};
   }
   return data;
 }
 
   function formatarTelefone(telefone: string) {
     if (telefone.length === 11) {
-      return `(${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)}`;
+      return (${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)};
     }
     return telefone;
   }
