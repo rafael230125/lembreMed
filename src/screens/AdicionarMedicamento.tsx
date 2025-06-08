@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView } from 'react-native';
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
@@ -7,11 +7,11 @@ import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as ImagePicker from 'expo-image-picker';
-import { Image } from 'react-native';
+import { Image, Platform } from 'react-native';
 import Modal from 'react-native-modal';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../types/types';
-
+import * as Notifications from 'expo-notifications';
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
 
 const { width, height } = Dimensions.get('window');
@@ -24,13 +24,46 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [imagem, setImagem] = useState<string | null>(null);
   const [isImageOptionsVisible, setImageOptionsVisible] = useState(false);
-  const [frequenciaTipo, setFrequenciaTipo] = useState<'diaria' | 'hora' | 'semana'>('diaria');
+  const [frequenciaTipo, setFrequenciaTipo] = useState<'diaria' | 'horas' | 'semana'>('diaria');
   const [frequenciaQuantidade, setFrequenciaQuantidade] = useState<number>(1);
   const [diasSemanaSelecionados, setDiasSemanaSelecionados] = useState<number[]>([]);
   const [dataHoraInicio, setDataHoraInicio] = useState(new Date());
   const [isFreqInputVisible, setFreqInputVisible] = useState(false);
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
 
+  useEffect(() => {
+    async function criarCanal() {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('medicamentos', {
+          name: 'Lembretes de Medicamento',
+          importance: Notifications.AndroidImportance.HIGH,
+          sound: 'default',
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+        });
+      }
+    }
+    criarCanal();
+  }, []);
+
+  useEffect(() => {
+    async function registrarPushNotification() {
+      const { status } = await Notifications.requestPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Você não receberá as notificações.');
+        return;
+      }
+
+      // const token = (await Notifications.getExpoPushTokenAsync()).data;
+      const token = await Notifications.getExpoPushTokenAsync({
+        projectId: 'SEU_PROJECT_ID_AQUI',
+      });
+      console.log('Expo Push Token:', token);
+    }
+
+    registrarPushNotification();
+  }, []);
 
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -78,6 +111,97 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     }
   };
 
+  async function agendarNotificacao(
+    dataInicio: Date,
+    titulo: string,
+    frequenciaTipo: 'diaria' | 'horas' | 'semana',
+    frequenciaQuantidade: number,
+    diasSemanaSelecionados: number[], 
+    idMedicamento: string
+  ) {
+  console.log('Data início (hora local):', dataInicio.toLocaleString());
+  
+   {
+    if (frequenciaTipo === 'diaria') {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🔔 Hora do medicamento!',
+          body: `Tome seu medicamento: ${titulo}`,
+          sound: 'default',
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          data: { medicamentoId: idMedicamento },
+        },
+        trigger: {
+          hour: dataInicio.getHours(),
+          minute: dataInicio.getMinutes(),
+          repeats: true,
+          channelId: 'medicamentos',
+        },
+      });
+
+    } else if (frequenciaTipo === 'horas') {
+      // Expo Notifications não suporta triggers com intervalo em horas, precisa transformar em segundos: X horas * 3600 segundos
+
+      const intervalSeconds = frequenciaQuantidade * 3600;
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🔔 Hora do medicamento!',
+          body: `Tome seu medicamento: ${titulo}`,
+          sound: 'default',
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          data: { medicamentoId: idMedicamento },
+        },
+        trigger: {
+          seconds: intervalSeconds,
+          repeats: true,
+          channelId: 'medicamentos',
+        },
+      });
+
+    } else if (frequenciaTipo === 'semana') {
+
+      for (const dia of diasSemanaSelecionados) {
+        // De 0 (domingo) a 6 (sábado)
+
+        // Calcular a próxima data que cai nesse dia da semana a partir de hoje
+        const agora = new Date();
+        const proximoDia = new Date(agora);
+
+        // Definir o horário para a notificação no dia escolhido
+        proximoDia.setHours(dataInicio.getHours(), dataInicio.getMinutes(), 0, 0);
+
+        // Calcular diferença de dias para o dia da semana
+        const diff = (dia + 7 - proximoDia.getDay()) % 7;
+        if (diff === 0 && proximoDia <= agora) {
+          // Se for hoje mas horário já passou, agenda para a próxima semana
+          proximoDia.setDate(proximoDia.getDate() + 7);
+        } else {
+          proximoDia.setDate(proximoDia.getDate() + diff);
+        }
+
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '🔔 Hora do medicamento!',
+            body: `Tome seu medicamento: ${titulo}`,
+            sound: 'default',
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            data: { medicamentoId: idMedicamento },
+          },
+          trigger: {
+            weekday: dia + 1, // 1=domingo, 7=sábado
+            hour: dataInicio.getHours(),
+            minute: dataInicio.getMinutes(),
+            repeats: true,
+            channelId: 'medicamentos',
+          },
+        });
+      }
+    }
+  }
+}
+
+
   const handleSave = async () => {
     try {
       const user = getAuth().currentUser;
@@ -98,14 +222,16 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         return;
       }
 
-      // Juntar dataHoraInicio com a hora selecionada (data)
+      // Juntar dataHoraInicio com a hora selecionada 
       const dataInicio = new Date(dataHoraInicio);
       dataInicio.setHours(data.getHours());
       dataInicio.setMinutes(data.getMinutes());
       dataInicio.setSeconds(0);
       dataInicio.setMilliseconds(0);
 
-      await addDoc(collection(db, "medicamentos"), {
+
+      // Adiciona a tarefa no Firestore
+      const docRef = await addDoc(collection(db, "medicamentos"), {
         titulo: titulo,
         dataHoraInicio: dataInicio.toISOString(),
         frequenciaTipo,
@@ -114,6 +240,15 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         cor: cor,
         userId: user.uid,
       });
+
+       // Agendar notificação para o horário definido
+      await agendarNotificacao( 
+        dataInicio,
+        titulo,
+        frequenciaTipo,
+        frequenciaQuantidade,
+        diasSemanaSelecionados,
+        docRef.id);
 
       // Reseta os campos
       setTitulo('');
@@ -204,7 +339,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
 
           <Text style={styles.label}>Frequência:</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
-            {['diaria', 'hora', 'semana'].map(tipo => (
+            {['diaria', 'horas', 'semana'].map(tipo => (
               <TouchableOpacity
                 key={tipo}
                 onPress={() => setFrequenciaTipo(tipo as any)}
@@ -214,13 +349,13 @@ export default function AdicionarMedicamento({ navigation }: Props) {
                 ]}
               >
                 <Text style={frequenciaTipo === tipo ? { color: 'white' } : {}}>
-                  {tipo === 'diaria' ? 'Diária' : tipo === 'hora' ? 'A cada X horas' : 'Semanal'}
+                  {tipo === 'diaria' ? 'Diária' : tipo === 'horas' ? 'A cada X horas' : 'Semanal'}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {frequenciaTipo === 'hora' && (
+          {frequenciaTipo === 'horas' && (
             <>
               <Text style={styles.label}>A cada quantas horas?</Text>
               <CustomInput
