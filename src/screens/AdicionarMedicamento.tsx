@@ -116,69 +116,33 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     titulo: string,
     frequenciaTipo: 'diaria' | 'horas' | 'semana',
     frequenciaQuantidade: number,
-    diasSemanaSelecionados: number[], 
+    diasSemanaSelecionados: number[],
     idMedicamento: string
   ) {
-  console.log('Data início (hora local):', dataInicio.toLocaleString());
-  
-   {
-    if (frequenciaTipo === 'diaria') {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🔔 Hora do medicamento!',
-          body: `Tome seu medicamento: ${titulo}`,
-          sound: 'default',
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          data: { medicamentoId: idMedicamento },
-        },
-        trigger: {
-          hour: dataInicio.getHours(),
-          minute: dataInicio.getMinutes(),
-          repeats: true,
-          channelId: 'medicamentos',
-        },
-      });
+    console.log('Data início (hora local):', dataInicio.toLocaleString());
 
-    } else if (frequenciaTipo === 'horas') {
-      // Expo Notifications não suporta triggers com intervalo em horas, precisa transformar em segundos: X horas * 3600 segundos
+    {
+      if (frequenciaTipo === 'diaria') {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '🔔 Hora do medicamento!',
+            body: `Tome seu medicamento: ${titulo}`,
+            sound: 'default',
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            data: { medicamentoId: idMedicamento },
+          },
+          trigger: {
+            hour: dataInicio.getHours(),
+            minute: dataInicio.getMinutes(),
+            repeats: true,
+            channelId: 'medicamentos',
+          },
+        });
 
-      const intervalSeconds = frequenciaQuantidade * 3600;
+      } else if (frequenciaTipo === 'horas') {
+        // Expo Notifications não suporta triggers com intervalo em horas, precisa transformar em segundos: X horas * 3600 segundos
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🔔 Hora do medicamento!',
-          body: `Tome seu medicamento: ${titulo}`,
-          sound: 'default',
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          data: { medicamentoId: idMedicamento },
-        },
-        trigger: {
-          seconds: intervalSeconds,
-          repeats: true,
-          channelId: 'medicamentos',
-        },
-      });
-
-    } else if (frequenciaTipo === 'semana') {
-
-      for (const dia of diasSemanaSelecionados) {
-        // De 0 (domingo) a 6 (sábado)
-
-        // Calcular a próxima data que cai nesse dia da semana a partir de hoje
-        const agora = new Date();
-        const proximoDia = new Date(agora);
-
-        // Definir o horário para a notificação no dia escolhido
-        proximoDia.setHours(dataInicio.getHours(), dataInicio.getMinutes(), 0, 0);
-
-        // Calcular diferença de dias para o dia da semana
-        const diff = (dia + 7 - proximoDia.getDay()) % 7;
-        if (diff === 0 && proximoDia <= agora) {
-          // Se for hoje mas horário já passou, agenda para a próxima semana
-          proximoDia.setDate(proximoDia.getDate() + 7);
-        } else {
-          proximoDia.setDate(proximoDia.getDate() + diff);
-        }
+        const intervalSeconds = frequenciaQuantidade * 3600;
 
         await Notifications.scheduleNotificationAsync({
           content: {
@@ -189,18 +153,53 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             data: { medicamentoId: idMedicamento },
           },
           trigger: {
-            weekday: dia + 1, // 1=domingo, 7=sábado
-            hour: dataInicio.getHours(),
-            minute: dataInicio.getMinutes(),
+            seconds: intervalSeconds,
             repeats: true,
             channelId: 'medicamentos',
           },
         });
+
+      } else if (frequenciaTipo === 'semana') {
+
+        for (const dia of diasSemanaSelecionados) {
+          // De 0 (domingo) a 6 (sábado)
+
+          // Calcular a próxima data que cai nesse dia da semana a partir de hoje
+          const agora = new Date();
+          const proximoDia = new Date(agora);
+
+          // Definir o horário para a notificação no dia escolhido
+          proximoDia.setHours(dataInicio.getHours(), dataInicio.getMinutes(), 0, 0);
+
+          // Calcular diferença de dias para o dia da semana
+          const diff = (dia + 7 - proximoDia.getDay()) % 7;
+          if (diff === 0 && proximoDia <= agora) {
+            // Se for hoje mas horário já passou, agenda para a próxima semana
+            proximoDia.setDate(proximoDia.getDate() + 7);
+          } else {
+            proximoDia.setDate(proximoDia.getDate() + diff);
+          }
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '🔔 Hora do medicamento!',
+              body: `Tome seu medicamento: ${titulo}`,
+              sound: 'default',
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+              data: { medicamentoId: idMedicamento },
+            },
+            trigger: {
+              weekday: dia + 1, // 1=domingo, 7=sábado
+              hour: dataInicio.getHours(),
+              minute: dataInicio.getMinutes(),
+              repeats: true,
+              channelId: 'medicamentos',
+            },
+          });
+        }
       }
     }
   }
-}
-
 
   const handleSave = async () => {
     try {
@@ -241,8 +240,8 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         userId: user.uid,
       });
 
-       // Agendar notificação para o horário definido
-      await agendarNotificacao( 
+      // Agendar notificação para o horário definido
+      await agendarNotificacao(
         dataInicio,
         titulo,
         frequenciaTipo,
