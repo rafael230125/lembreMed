@@ -82,7 +82,7 @@ export default function InformacaoConta({ navigation }: Props) {
           <Text style={styles.titleSub}>Data de nascimento:</Text>
             <MaskedTextInput
               mask="99/99/9999"
-              onChangeText={(text, rawText) => setBirthDate(rawText)}
+              onChangeText={(masked, unmasked) => setBirthDate(unmasked)}
               value={birthDate}
               keyboardType="numeric"
               placeholder="DD/MM/AAAA"
@@ -92,7 +92,7 @@ export default function InformacaoConta({ navigation }: Props) {
           <Text style={styles.titleSub}>Telefone:</Text>
             <MaskedTextInput
               mask="(99) 99999-9999"
-              onChangeText={(text, rawText) => setPhone(rawText)}
+              onChangeText={(masked, unmasked) => setPhone(unmasked)}
               value={phone}
               keyboardType="numeric"
               placeholder="(00) 00000-0000"

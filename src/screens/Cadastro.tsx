@@ -63,11 +63,17 @@ export default function Cadastro({ navigation }: Props) {
       navigation.navigate('InformacaoConta');
     } catch (error: any) {
       console.error('Erro ao criar conta:', error.message);
-      Alert.alert('Erro', 'Não foi possível criar a conta. Tente novamente.');
-    } finally {
+      
+          if (error.code === 'auth/email-already-in-use') {
+          setEmailError('Este email já está em uso.');
+        } else {
+          Alert.alert('Erro', 'Não foi possível criar a conta. Tente novamente.');
+        }
+        }   
+      finally {
       setIsLoading(false);
-    }
-  };
+            }
+          };
 
 
   return (
