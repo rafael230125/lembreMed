@@ -46,11 +46,11 @@ export default function MeuPerfil({ navigation }: Props) {
   };
 
   function formatarData(data: string) {
-  if (data.length === 8) {
-    return `(${data.substring(0, 2)}/${data.substring(2, 4)}/${data.substring(4)}`;
+    if (data.length === 8) {
+      return `(${data.substring(0, 2)}/${data.substring(2, 4)}/${data.substring(4)}`;
+    }
+    return data;
   }
-  return data;
-}
 
   function formatarTelefone(telefone: string) {
     if (telefone.length === 11) {
@@ -63,18 +63,22 @@ export default function MeuPerfil({ navigation }: Props) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        const userDocRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          setNome(userData.name || '');
-          setTelefone(formatarTelefone(userData.phone || ''));
-          setDataNascimento(userData.birthDate || '');
+      try {
+        if (user) {
+          setUser(user);
+          const userDocRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(userDocRef);
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setNome(userData.name || '');
+            setTelefone(formatarTelefone(userData.phone || ''));
+            setDataNascimento(userData.birthDate || '');
+          }
+        } else {
+          setUser(null);
         }
-      } else {
-        setUser(null);
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
       }
     });
 
@@ -202,7 +206,7 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.1,
     alignSelf: 'center',
   },
-    input: {
+  input: {
     width: '100%',
     borderBottomWidth: 1,
     borderColor: '#ccc',

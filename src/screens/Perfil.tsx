@@ -30,17 +30,21 @@ export default function Perfil({ navigation }: Props) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        const userDocRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          setNome(userData.name || '');
-          setEmail(userData.email || '');
+      try {
+        if (user) {
+          setUser(user);
+          const userDocRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(userDocRef);
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setNome(userData.name || '');
+            setEmail(userData.email || '');
+          }
+        } else {
+          setUser(null);
         }
-      } else {
-        setUser(null);
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
       }
     });
 
