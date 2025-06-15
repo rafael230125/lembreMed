@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList, RootStackParamList } from '../types/types';
+import { Image } from 'react-native';
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -50,10 +51,14 @@ export default function Home({ navigation }: Props) {
           const medicamentosRef = collection(db, 'medicamentos');
           const q = query(medicamentosRef, where('userId', '==', user.uid));
           const medicamentosSnapshot = await getDocs(q);
-          const medicamentosList = medicamentosSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
+          const medicamentosList = medicamentosSnapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              imagem: data.imagem || null, 
+              ...data,
+          };
+          });
           setMedicamentos(medicamentosList);
         } catch (error) {
           Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
@@ -83,6 +88,11 @@ export default function Home({ navigation }: Props) {
       onPress={() => navigation.navigate('EditarMedicamento', { medicamento: item })}
     >
       <View style={styles.cardIcon}>
+        {item.imagem ? (
+          <Image source={{ uri: item.imagem }} style={styles.cardImage} />
+        ) : (
+          <Ionicons name="medkit" size={24} color="#000" />
+       )}
       </View>
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
@@ -189,4 +199,10 @@ const styles = StyleSheet.create({
     bottom: 30,
     right: 30,
   },
+  cardImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    resizeMode: 'cover',
+  },  
 });

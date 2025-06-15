@@ -13,6 +13,9 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../types/types';
 import * as Notifications from 'expo-notifications';
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import * as FileSystem from 'expo-file-system';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -110,6 +113,40 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       setImagem(result.assets[0].uri);
     }
   };
+
+  const uploadImagem = async (uri: string, userId: string): Promise<string> => {
+    const storage = getStorage();
+  
+    // Converte a imagem local para blob
+    const uriToBlob = (uri: string): Promise<Blob> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          resolve(xhr.response);
+        };
+        xhr.onerror = () => {
+          reject(new Error('Erro ao converter imagem em blob'));
+        };
+        xhr.responseType = 'blob';
+        xhr.open('GET', uri, true);
+        xhr.send(null);
+      });
+    };
+  
+    const blob = await uriToBlob(uri);
+    const imageName = `medicamentos/${userId}/${Date.now()}.jpg`;
+    const imageRef = ref(storage, imageName);
+  
+    await uploadBytes(imageRef, blob);
+    const downloadURL = await getDownloadURL(imageRef);
+    return downloadURL;
+  };
+  
+  
+
+
+
+
 
   async function agendarNotificacao(
     dataInicio: Date,
@@ -228,6 +265,11 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       dataInicio.setSeconds(0);
       dataInicio.setMilliseconds(0);
 
+      let imageUrl = null;
+      if (imagem) {
+        imageUrl = await uploadImagem(imagem, user.uid);
+      }
+
 
       // Adiciona a tarefa no Firestore
       const docRef = await addDoc(collection(db, "medicamentos"), {
@@ -237,6 +279,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         frequenciaQuantidade,
         diasSemanaSelecionados,
         cor: cor,
+        imagem: imageUrl,
         userId: user.uid,
       });
 

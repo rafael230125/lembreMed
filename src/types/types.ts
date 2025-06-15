@@ -36,4 +36,5 @@ export type Medicamento = {
   diasSemanaSelecionados: number[];    
   frequenciaQuantidade: number;
   frequenciaTipo: string;
+  imagem?: string | null;
 };
