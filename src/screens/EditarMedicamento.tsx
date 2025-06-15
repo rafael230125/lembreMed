@@ -145,12 +145,6 @@ export default function EditarMedicamento({ navigation }: Props) {
 
       const medicamentoDocRef = doc(db, 'medicamentos', medicamento.id);
 
-      // let imagemURL = medicamento?.imagem || null;
-
-      // if (imagem && !imagem.startsWith('http')) {
-      //   imagemURL = await uploadImagem(imagem, user.uid, medicamento.id);
-      // }
-
       let imagemURL = null;
 
       if (imagem && !imagem.startsWith('http')) {
