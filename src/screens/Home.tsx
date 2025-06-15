@@ -88,8 +88,8 @@ export default function Home({ navigation }: Props) {
       onPress={() => navigation.navigate('EditarMedicamento', { medicamento: item })}
     >
       <View style={styles.cardIcon}>
-        {item.imagemUrl ? (
-          <Image source={{ uri: item.imagemUrl }} style={styles.cardImage} />
+        {item.imagem ? (
+          <Image source={{ uri: item.imagem }} style={styles.cardImage} />
         ) : (
           <Ionicons name="medkit" size={24} color="#000" />
        )}

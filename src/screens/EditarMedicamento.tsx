@@ -11,9 +11,7 @@ import { Image } from 'react-native';
 import Modal from 'react-native-modal';
 import { RootStackParamList } from '../types/types';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import * as FileSystem from 'expo-file-system';
-import * as mime from 'react-native-mime-types';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -147,11 +145,32 @@ export default function EditarMedicamento({ navigation }: Props) {
 
       const medicamentoDocRef = doc(db, 'medicamentos', medicamento.id);
 
-      let imagemURL = medicamento?.imagem || null;
+      // let imagemURL = medicamento?.imagem || null;
+
+      // if (imagem && !imagem.startsWith('http')) {
+      //   imagemURL = await uploadImagem(imagem, user.uid, medicamento.id);
+      // }
+
+      let imagemURL = null;
 
       if (imagem && !imagem.startsWith('http')) {
+        // Nova imagem foi escolhida
         imagemURL = await uploadImagem(imagem, user.uid, medicamento.id);
+      } else if (imagem && imagem.startsWith('http')) {
+        // Mantém imagem já existente
+        imagemURL = imagem;
+      } else if (!imagem && medicamento.imagem) {
+        // Imagem foi removida — excluir do Storage
+        const storage = getStorage();
+        const imageRef = ref(storage, `imagens_medicamentos/${user.uid}/${medicamento.id}`);
+        try {
+          await deleteObject(imageRef);
+          console.log('Imagem removida');
+        } catch (error) {
+          console.warn('Erro ao remover imagem:', error);
+        }
       }
+
 
       await updateDoc(medicamentoDocRef, {
         titulo: titulo,
