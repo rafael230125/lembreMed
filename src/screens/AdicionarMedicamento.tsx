@@ -302,7 +302,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     { id: '9', nome: 'Sinvastatina', bula: true, frequencia: '8' },
     { id: '10', nome: 'AAS', bula: true, frequencia: 'diaria' },
     { id: '11', nome: 'Prednisona', bula: false, frequencia: 'semanal' },
-    { id: '12', nome: 'Clonazepam', bula: true, frequencia: '8' },
+    { id: '12', nome: 'Clonazepam', bula: true, frequencia: '8' }, /*é só pra teste, vou ligar c banco*/
   ];
 
 
