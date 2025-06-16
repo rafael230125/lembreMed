@@ -11,6 +11,7 @@ export type RootStackParamList = {
   InformacaoConta: undefined;
   Main: undefined;
   EditarMedicamento: { medicamento: Medicamento };
+  PresetarMedicamento: undefined;
 };
 
 export type TabParamList = {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView } from 'react-native';
 import CustomButton from '../components/CustomButton';
+import CustomInputZoom from '../components/CustomInputZoom';
 import CustomInput from '../components/CustomInput';
 import { db } from '../services/firebaseConfig';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
@@ -12,6 +13,8 @@ import Modal from 'react-native-modal';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../types/types';
 import * as Notifications from 'expo-notifications';
+import { Button } from 'react-native-paper';
+
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
 
 const { width, height } = Dimensions.get('window');
@@ -30,6 +33,8 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [dataHoraInicio, setDataHoraInicio] = useState(new Date());
   const [isFreqInputVisible, setFreqInputVisible] = useState(false);
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalBuscarMedicamento, setModalBuscarMedicamento] = useState('');
 
   useEffect(() => {
     async function criarCanal() {
@@ -282,20 +287,86 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     }
   };
 
+  const abrirModal = () => setModalVisible(true);
+  const fecharModal = () => setModalVisible(false);
+  
+  const medicamentos = [
+    { id: '1', nome: 'Paracetamol', bula: true, frequencia: 'diaria' },
+    { id: '2', nome: 'Ibuprofeno', bula: true, frequencia: '8' },
+    { id: '3', nome: 'Dipirona', bula: false, frequencia: 'semanal' },
+    { id: '4', nome: 'Amoxicilina', bula: true, frequencia: 'diaria' },
+    { id: '5', nome: 'Cetirizina', bula: false, frequencia: 'semanal' },
+    { id: '6', nome: 'Omeprazol', bula: true, frequencia: '8' },
+    { id: '7', nome: 'Losartana', bula: true, frequencia: 'diaria' },
+    { id: '8', nome: 'Metformina', bula: false, frequencia: 'semanal' },
+    { id: '9', nome: 'Sinvastatina', bula: true, frequencia: '8' },
+    { id: '10', nome: 'AAS', bula: true, frequencia: 'diaria' },
+    { id: '11', nome: 'Prednisona', bula: false, frequencia: 'semanal' },
+    { id: '12', nome: 'Clonazepam', bula: true, frequencia: '8' },
+  ];
+
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.outerContainer}>
+    
+    <ScrollView 
+      contentContainerStyle={styles.scrollContainer} >
+      
         <View style={styles.container}>
+          <Modal isVisible={modalVisible} style={{marginVertical:50, minHeight: height * 0.8}}>
+                <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
+                  <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
+                    <CustomInput 
+                      value={modalBuscarMedicamento}
+                      onChangeText={setModalBuscarMedicamento}
+                      placeholder="Digite o nome do medicamento"
+                      placeholderTextColor="#aaa"
+                    />
+                    {medicamentos
+                      .filter(medicamento =>
+                        medicamento.nome
+                          .toLowerCase()
+                          .includes(modalBuscarMedicamento.toLowerCase())
+                      )
+                      .map((medicamento: any) => (
+                        <TouchableOpacity
+                          key={medicamento.id}
+                          style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
+                          onPress={() => {
+                            setTitulo(medicamento.nome);
+                            fecharModal();
+                          }}
+                        >
+                          <Text style={{ fontSize: 16 }}>{medicamento.nome}</Text>
+                          {medicamento.bula ? (
+                            <Text style={{ color: 'green' }}>Bula disponível</Text>
+                          ) : (
+                            <Text style={{ color: 'red' }}>Bula não disponível</Text>
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                  </ScrollView>
+                </View>
+          </Modal>
           <Text style={styles.title}>Adicionar medicamento</Text>
+          <View style={styles.outerContainer}>
+            <Text style={styles.label}>Nome:</Text>
+          <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent:'center', height:'auto'}}>
+              
+              <CustomInputZoom
+                value={titulo}
+                onChangeText={setTitulo}
+                placeholder="Digite o nome"
+                placeholderTextColor="#aaa"
+              />
+              <TouchableOpacity onPress={abrirModal} style={{ padding: 8 , alignItems: 'center', marginTop: -16}}>
+                <Image
+                  source={require('../../assets/lupa.png')}
+                  style={{ width: 28, height: 28}}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
 
-          <Text style={styles.label}>Nome:</Text>
-          <CustomInput
-            value={titulo}
-            onChangeText={setTitulo}
-            placeholder="Digite o nome"
-            placeholderTextColor="#aaa"
-          />
-
+          </View>
           <Text style={styles.label}>Data de Início:</Text>
           <TouchableOpacity
             style={styles.info}
@@ -303,6 +374,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
           >
             <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
           </TouchableOpacity>
+          
 
           <DateTimePickerModal
             isVisible={datePickerVisible}
@@ -427,7 +499,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
               <Text style={styles.imagePlaceholderText}>Toque para adicionar imagem</Text>
             )}
           </TouchableOpacity>
-
+          
           <Modal
             isVisible={isImageOptionsVisible}
             onBackdropPress={() => setImageOptionsVisible(false)}
