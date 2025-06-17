@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView, Linking } from 'react-native';
 import CustomButton from '../components/CustomButton';
 import CustomInputZoom from '../components/CustomInputZoom';
 import CustomInput from '../components/CustomInput';
@@ -35,6 +35,8 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
   const [modalVisible, setModalVisible] = useState(false);
   const [modalBuscarMedicamento, setModalBuscarMedicamento] = useState('');
+  const [bulaDisponivel, setBulaDisponivel] = useState(false);
+  const [bulaUrl, setBulaUrl] = useState('');
 
   useEffect(() => {
     async function criarCanal() {
@@ -291,18 +293,18 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const fecharModal = () => setModalVisible(false);
   
   const medicamentos = [
-    { id: '1', nome: 'Paracetamol', bula: true, frequencia: 'diaria' },
-    { id: '2', nome: 'Ibuprofeno', bula: true, frequencia: '8' },
-    { id: '3', nome: 'Dipirona', bula: false, frequencia: 'semanal' },
-    { id: '4', nome: 'Amoxicilina', bula: true, frequencia: 'diaria' },
-    { id: '5', nome: 'Cetirizina', bula: false, frequencia: 'semanal' },
-    { id: '6', nome: 'Omeprazol', bula: true, frequencia: '8' },
-    { id: '7', nome: 'Losartana', bula: true, frequencia: 'diaria' },
-    { id: '8', nome: 'Metformina', bula: false, frequencia: 'semanal' },
-    { id: '9', nome: 'Sinvastatina', bula: true, frequencia: '8' },
-    { id: '10', nome: 'AAS', bula: true, frequencia: 'diaria' },
-    { id: '11', nome: 'Prednisona', bula: false, frequencia: 'semanal' },
-    { id: '12', nome: 'Clonazepam', bula: true, frequencia: '8' }, /*é só pra teste, vou ligar c banco*/
+    { id: '1', nome: 'Paracetamol', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
+    { id: '2', nome: 'Ibuprofeno', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 },
+    { id: '3', nome: 'Dipirona', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 4 },
+    { id: '4', nome: 'Amoxicilina', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
+    { id: '5', nome: 'Cetirizina', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 4 },
+    { id: '6', nome: 'Omeprazol', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 },
+    { id: '7', nome: 'Losartana', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
+    { id: '8', nome: 'Metformina', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 7 },
+    { id: '9', nome: 'Sinvastatina', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 },
+    { id: '10', nome: 'AAS', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
+    { id: '11', nome: 'Prednisona', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 7 },
+    { id: '12', nome: 'Clonazepam', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 }, /*é só pra teste, vou ligar c banco*/
   ];
 
 
@@ -333,7 +335,15 @@ export default function AdicionarMedicamento({ navigation }: Props) {
                           style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
                           onPress={() => {
                             setTitulo(medicamento.nome);
+                            setFrequenciaTipo(medicamento.frequencia);
                             fecharModal();
+                            if (medicamento.bula) {
+                              setBulaDisponivel(true);
+                              setBulaUrl(medicamento.url); // Exemplo de URL da bula
+                            } else {
+                              setBulaDisponivel(false);
+                              setBulaUrl('');
+                            }
                           }}
                         >
                           <Text style={{ fontSize: 16 }}>{medicamento.nome}</Text>
@@ -367,6 +377,21 @@ export default function AdicionarMedicamento({ navigation }: Props) {
               </TouchableOpacity>
 
           </View>
+
+          {bulaDisponivel && (
+            <TouchableOpacity
+              onPress={() => {
+                if (bulaUrl) {
+                  Linking.openURL(bulaUrl);
+                } else {
+                  Alert.alert('Bula não disponível', 'Desculpe, a bula deste medicamento não está disponível.');
+                }
+              }}
+              style={{ marginBottom: 20 }}
+            >
+              <Text style={{ color: '#007BFF' }}>Ver bula do medicamento</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.label}>Data de Início:</Text>
           <TouchableOpacity
             style={styles.info}
