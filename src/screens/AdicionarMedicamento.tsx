@@ -37,6 +37,8 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [modalBuscarMedicamento, setModalBuscarMedicamento] = useState('');
   const [bulaDisponivel, setBulaDisponivel] = useState(false);
   const [bulaUrl, setBulaUrl] = useState('');
+  const [medicamentosFirebase, setMedicamentosFirebase] = useState<any[]>([]);
+
 
   useEffect(() => {
     async function criarCanal() {
@@ -71,6 +73,24 @@ export default function AdicionarMedicamento({ navigation }: Props) {
 
     registrarPushNotification();
   }, []);
+
+  useEffect(() => {
+  async function carregarMedicamentos() {
+    try {
+      const snapshot = await getDocs(collection(db, 'bula')); // substitua pelo nome real da coleção
+      const lista = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setMedicamentosFirebase(lista);
+    } catch (error) {
+      console.error('Erro ao buscar medicamentos:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
+    }
+  }
+
+  carregarMedicamentos();
+}, []);
 
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -269,7 +289,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       Alert.alert('Sucesso', 'Lembrete salvo com sucesso!');
       navigation.goBack();
     } catch (error) {
-      console.error('Erro ao salvar o lembrete:', error);
       Alert.alert('Erro', 'Não foi possível salvar o lembrete.');
     }
   };
@@ -292,20 +311,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const abrirModal = () => setModalVisible(true);
   const fecharModal = () => setModalVisible(false);
   
-  const medicamentos = [
-    { id: '1', nome: 'Paracetamol', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
-    { id: '2', nome: 'Ibuprofeno', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 },
-    { id: '3', nome: 'Dipirona', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 4 },
-    { id: '4', nome: 'Amoxicilina', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
-    { id: '5', nome: 'Cetirizina', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 4 },
-    { id: '6', nome: 'Omeprazol', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 },
-    { id: '7', nome: 'Losartana', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
-    { id: '8', nome: 'Metformina', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 7 },
-    { id: '9', nome: 'Sinvastatina', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 },
-    { id: '10', nome: 'AAS', bula: true, frequencia: 'diaria', url:'https://youtube.com', intervalo: 0 },
-    { id: '11', nome: 'Prednisona', bula: false, frequencia: 'semana', url:'https://youtube.com', intervalo: 7 },
-    { id: '12', nome: 'Clonazepam', bula: true, frequencia: 'horas', url:'https://youtube.com', intervalo: 6 }, /*é só pra teste, vou ligar c banco*/
-  ];
 
 
   return (
@@ -314,7 +319,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       contentContainerStyle={styles.scrollContainer} >
       
         <View style={styles.container}>
-          <Modal isVisible={modalVisible} style={{marginVertical:50, minHeight: height * 0.8}}>
+          <Modal isVisible={modalVisible} style={{marginVertical:70, minHeight: height * 0.7}} onBackdropPress={() => setModalVisible(false)}>
                 <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
                   <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
                     <CustomInput 
@@ -323,37 +328,41 @@ export default function AdicionarMedicamento({ navigation }: Props) {
                       placeholder="Digite o nome do medicamento"
                       placeholderTextColor="#aaa"
                     />
-                    {medicamentos
-                      .filter(medicamento =>
-                        medicamento.nome
-                          .toLowerCase()
-                          .includes(modalBuscarMedicamento.toLowerCase())
-                      )
+
+                    {medicamentosFirebase
+                      .filter(medicamento => medicamento.medicamento.toLowerCase().includes(modalBuscarMedicamento.toLowerCase()))
                       .map((medicamento: any) => (
                         <TouchableOpacity
                           key={medicamento.id}
                           style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
                           onPress={() => {
-                            setTitulo(medicamento.nome);
+                            setTitulo(medicamento.medicamento);
                             setFrequenciaTipo(medicamento.frequencia);
+                            if (medicamento.frequencia == 'horas') {
+                              setFreqInputText(String(medicamento.intervalo));
+                            }
                             fecharModal();
                             if (medicamento.bula) {
                               setBulaDisponivel(true);
-                              setBulaUrl(medicamento.url); // Exemplo de URL da bula
+                              setBulaUrl(medicamento.urlBula); 
                             } else {
                               setBulaDisponivel(false);
                               setBulaUrl('');
                             }
+                                setImagem(medicamento.img); 
+
                           }}
                         >
-                          <Text style={{ fontSize: 16 }}>{medicamento.nome}</Text>
+                          <Text style={{ fontSize: 16 }}>{medicamento.medicamento}</Text>
                           {medicamento.bula ? (
                             <Text style={{ color: 'green' }}>Bula disponível</Text>
                           ) : (
                             <Text style={{ color: 'red' }}>Bula não disponível</Text>
                           )}
+
+                          
                         </TouchableOpacity>
-                      ))}
+                    ))}
                   </ScrollView>
                 </View>
           </Modal>
