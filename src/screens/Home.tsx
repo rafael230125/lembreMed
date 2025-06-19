@@ -21,6 +21,8 @@ import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList, RootStackParamList } from '../types/types';
 import { Image } from 'react-native';
+import ConfirmDelete from '../components/ConfirmDelete';
+
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -36,6 +38,9 @@ const { width, height } = Dimensions.get('window');
 export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
   const [medicamentos, setMedicamentos] = useState<any[]>([]);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedIdToDelete, setSelectedIdToDelete] = useState<string | null>(null);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -70,16 +75,28 @@ export default function Home({ navigation }: Props) {
     }, [])
   );
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'medicamentos', id));
-      setMedicamentos((prev) => prev.filter((tarefa) => tarefa.id !== id));
-      Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
-      console.error(error);
-    }
-  };
+  const confirmDelete = (id: string) => {
+  setSelectedIdToDelete(id);
+  setDeleteModalVisible(true);
+};
+
+const handleConfirmDelete = async () => {
+  if (!selectedIdToDelete) return;
+
+  try {
+    await deleteDoc(doc(db, 'medicamentos', selectedIdToDelete));
+    setMedicamentos((prev) =>
+      prev.filter((med) => med.id !== selectedIdToDelete)
+    );
+    Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
+  } catch (error) {
+    Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
+    console.error(error);
+  } finally {
+    setDeleteModalVisible(false);
+    setSelectedIdToDelete(null);
+  }
+};
 
 
   const renderItem = ({ item }: any) => (
@@ -105,11 +122,12 @@ export default function Home({ navigation }: Props) {
       <TouchableOpacity
         onPress={(event) => {
           event.stopPropagation();
-          handleDelete(item.id);
-        }}
-      >
+          confirmDelete(item.id);
+            }}
+          >
         <Ionicons name="trash" size={20} color="#000" />
       </TouchableOpacity>
+
     </TouchableOpacity>
   );
 
@@ -133,6 +151,12 @@ export default function Home({ navigation }: Props) {
           contentContainerStyle={{ paddingBottom: 80 }}
         />
       </View>
+        <ConfirmDelete
+          visible={deleteModalVisible}
+          onCancel={() => setDeleteModalVisible(false)}
+          onConfirm={handleConfirmDelete}
+        />
+
     </View>
   );
 }
