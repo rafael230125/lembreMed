@@ -5,12 +5,14 @@ import CustomButton from '../components/CustomButton';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
+import Modal from 'react-native-modal';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '../services/firebaseConfig';
 import { MaskedTextInput } from 'react-native-mask-text';
 import { TextInput } from 'react-native';
 import { RootStackParamList } from '../types/types';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,11 +27,13 @@ export default function MeuPerfil({ navigation }: Props) {
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
+  const [imagem, setImagem] = useState<string | null>(null);
+  const [isImageOptionsVisible, setImageOptionsVisible] = useState(false);
 
-  const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permissão Necessária', 'É necessário conceder permissão para acessar a galeria.');
+  const handleChooseImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Permita acesso à galeria para escolher imagens.');
       return;
     }
 
@@ -37,11 +41,48 @@ export default function MeuPerfil({ navigation }: Props) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled) {
-      //updateUserField('profileImage', result.assets[0].uri);
+      setImagem(result.assets[0].uri);
+    }
+  };
+
+  const handleTakePicture = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Permita acesso à câmera para tirar fotos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setImagem(result.assets[0].uri);
+    }
+  };
+
+  const uploadImagem = async (uri: string, userId: string) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const storage = getStorage();
+      const imageRef = ref(storage, `users/imagens_users/${userId}`);
+
+      await uploadBytes(imageRef, blob);
+      const downloadURL = await getDownloadURL(imageRef);
+
+      return downloadURL;
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      throw error;
     }
   };
 
@@ -73,6 +114,7 @@ export default function MeuPerfil({ navigation }: Props) {
             setNome(userData.name || '');
             setTelefone(formatarTelefone(userData.phone || ''));
             setDataNascimento(userData.birthDate || '');
+            setImagem(userData.profileImage || '');
           }
         } else {
           setUser(null);
@@ -94,12 +136,33 @@ export default function MeuPerfil({ navigation }: Props) {
         return;
       }
 
+      let imagemURL = null;
+
+      if (imagem && !imagem.startsWith('http')) {
+        // Nova imagem foi escolhida
+        imagemURL = await uploadImagem(imagem, user.uid);
+      } else if (imagem && imagem.startsWith('http')) {
+        // Mantém imagem já existente
+        imagemURL = imagem;
+      } else if (!imagem && user.photoURL) {
+        // Imagem foi removida — excluir do Storage
+        const storage = getStorage();
+        const imageRef = ref(storage, `users/imagens_users/${user.uid}/`);
+        try {
+          await deleteObject(imageRef);
+          console.log('Imagem removida');
+        } catch (error) {
+          console.warn('Erro ao remover imagem:', error);
+        }
+      }
+
       const userDocRef = doc(db, 'users', user.uid);
 
       await updateDoc(userDocRef, {
         name: nome,
         phone: telefone,
         birthDate: dataNascimento,
+        profileImage: imagemURL,
       });
 
       Alert.alert('Perfil', 'Salvo com sucesso!');
@@ -111,18 +174,20 @@ export default function MeuPerfil({ navigation }: Props) {
     }
   };
 
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <View style={styles.photoContainer}>
-          <TouchableOpacity onPress={pickImage}>
+          {imagem ? (
             <Image
-              source={{ uri: 'https://via.placeholder.com/150' }}
+              source={{ uri: imagem }}
               style={styles.profilePhoto}
+              resizeMode="contain"
             />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
+          ) : (
+            <Ionicons name="person-circle-outline" size={60} color="#000" />
+          )}
+          <TouchableOpacity style={styles.editIcon} onPress={() => setImageOptionsVisible(true)}>
             <Ionicons name="pencil" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -155,6 +220,40 @@ export default function MeuPerfil({ navigation }: Props) {
             placeholder='DD/MM/AAAA'
           />
         </View>
+
+        <Modal
+          isVisible={isImageOptionsVisible}
+          onBackdropPress={() => setImageOptionsVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.modalButton} onPress={async () => {
+              setImageOptionsVisible(false);
+              await handleTakePicture();
+            }}>
+              <Text style={styles.modalButtonText}>Tirar foto</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalButton} onPress={async () => {
+              setImageOptionsVisible(false);
+              await handleChooseImage();
+            }}>
+              <Text style={styles.modalButtonText}>Escolher da galeria</Text>
+            </TouchableOpacity>
+
+            {imagem && (
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#ffcccc' }]} onPress={() => {
+                setImageOptionsVisible(false);
+                setImagem(null);
+              }}>
+                <Text style={[styles.modalButtonText, { color: '#a00' }]}>Remover imagem</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.modalCancelButton} onPress={() => setImageOptionsVisible(false)}>
+              <Text style={styles.modalButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
 
         <CustomButton title="Salvar" onPress={saveProfile} style={styles.customButton} />
       </View>
@@ -213,5 +312,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 10,
     marginBottom: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalButton: {
+    width: '100%',
+    padding: 15,
+    alignItems: 'center',
+    marginBottom: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  modalCancelButton: {
+    width: '100%',
+    padding: 15,
+    alignItems: 'center',
+    backgroundColor: '#ddd',
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    fontSize: 16,
   },
 });

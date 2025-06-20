@@ -116,7 +116,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
 
   const uploadImagem = async (uri: string, userId: string): Promise<string> => {
     const storage = getStorage();
-  
+
     // Converte a imagem local para blob
     const uriToBlob = (uri: string): Promise<Blob> => {
       return new Promise((resolve, reject) => {
@@ -132,21 +132,15 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         xhr.send(null);
       });
     };
-  
+
     const blob = await uriToBlob(uri);
     const imageName = `medicamentos/${userId}/${Date.now()}.jpg`;
     const imageRef = ref(storage, imageName);
-  
+
     await uploadBytes(imageRef, blob);
     const downloadURL = await getDownloadURL(imageRef);
     return downloadURL;
   };
-  
-  
-
-
-
-
 
   async function agendarNotificacao(
     dataInicio: Date,

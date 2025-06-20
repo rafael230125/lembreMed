@@ -27,6 +27,7 @@ export default function Perfil({ navigation }: Props) {
   const [nome, setNome] = useState('teste');
   const [email, setEmail] = useState('teste@email.com');
   const userProfileImage = 'sem foto';
+  const [imagem, setImagem] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -39,6 +40,7 @@ export default function Perfil({ navigation }: Props) {
             const userData = docSnap.data();
             setNome(userData.name || '');
             setEmail(userData.email || '');
+            setImagem(userData.profileImage || '');
           }
         } else {
           setUser(null);
@@ -67,7 +69,11 @@ export default function Perfil({ navigation }: Props) {
         {user ? (
           <View style={styles.profileContainer}>
             <View style={styles.profileCircle}>
-              <Image source={{ uri: userProfileImage }} style={styles.profileImage} />
+              {imagem ? (
+                <Image source={{ uri: imagem }} style={styles.profileImage} />
+              ) : (
+                <Ionicons name="person-circle-outline" size={60} color="#000" />
+              )}
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{nome || 'Usuário'}</Text>
