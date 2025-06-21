@@ -33,7 +33,7 @@ TaskManager.defineTask(BACKGROUND_TASK_NAME, async () => {
 
       const intervaloHorasOk =
         tipo === 'horas'
-          ? (agora.getTime() - dataHora.getTime()) % (quantidade * 3600 * 1000) < 600000 // 10 minutos de tolerância
+          ? (agora.getTime() - dataHora.getTime()) % (quantidade * 3600 * 1000) < 60000 // 10 minutos de tolerância
           : true;
 
       const diariaOk = tipo === 'diaria' && horaAgora === hora && minutoAgora === minuto;
@@ -53,6 +53,7 @@ TaskManager.defineTask(BACKGROUND_TASK_NAME, async () => {
           trigger: {
             seconds: 0, 
             channelId: 'medicamentos',
+            repeats: true
           }
         });
       } else{
