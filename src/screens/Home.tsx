@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SearchBar from '../components/SearchBar';
@@ -20,6 +21,9 @@ import { format } from 'date-fns';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList, RootStackParamList } from '../types/types';
+import { iniciarBackgroundFetch } from '../backgroundTask/backgroundTasks';
+import * as Notifications from 'expo-notifications';
+
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -36,6 +40,26 @@ export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
   const [medicamentos, setMedicamentos] = useState<any[]>([]);
 
+  useEffect(() => {
+    configurarCanalNotificacoes();
+    const requestPermissionsAndStartFetch = async () => {
+      await Notifications.requestPermissionsAsync();
+      iniciarBackgroundFetch(); 
+    };
+    requestPermissionsAndStartFetch();
+  }, []);
+
+  async function configurarCanalNotificacoes() {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('medicamentos', {
+      name: 'Lembretes de Medicamentos',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+      });
+    }
+  }
   useFocusEffect(
     useCallback(() => {
       const fetchMedicamentos = async () => {

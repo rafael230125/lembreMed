@@ -14,6 +14,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../types/types';
 import * as Notifications from 'expo-notifications';
 import { Button } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
 
@@ -38,41 +39,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [bulaDisponivel, setBulaDisponivel] = useState(false);
   const [bulaUrl, setBulaUrl] = useState('');
   const [medicamentosFirebase, setMedicamentosFirebase] = useState<any[]>([]);
-
-
-  useEffect(() => {
-    async function criarCanal() {
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('medicamentos', {
-          name: 'Lembretes de Medicamento',
-          importance: Notifications.AndroidImportance.HIGH,
-          sound: 'default',
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-        });
-      }
-    }
-    criarCanal();
-  }, []);
-
-  useEffect(() => {
-    async function registrarPushNotification() {
-      const { status } = await Notifications.requestPermissionsAsync();
-
-      if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'Você não receberá as notificações.');
-        return;
-      }
-
-      // const token = (await Notifications.getExpoPushTokenAsync()).data;
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId: 'SEU_PROJECT_ID_AQUI',
-      });
-      console.log('Expo Push Token:', token);
-    }
-
-    registrarPushNotification();
-  }, []);
 
   useEffect(() => {
   async function carregarMedicamentos() {
@@ -138,95 +104,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     }
   };
 
-  async function agendarNotificacao(
-    dataInicio: Date,
-    titulo: string,
-    frequenciaTipo: 'diaria' | 'horas' | 'semana',
-    frequenciaQuantidade: number,
-    diasSemanaSelecionados: number[],
-    idMedicamento: string
-  ) {
-    console.log('Data início (hora local):', dataInicio.toLocaleString());
-
-    {
-      if (frequenciaTipo === 'diaria') {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '🔔 Hora do medicamento!',
-            body: `Tome seu medicamento: ${titulo}`,
-            sound: 'default',
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            data: { medicamentoId: idMedicamento },
-          },
-          trigger: {
-            hour: dataInicio.getHours(),
-            minute: dataInicio.getMinutes(),
-            repeats: true,
-            channelId: 'medicamentos',
-          },
-        });
-
-      } else if (frequenciaTipo === 'horas') {
-        // Expo Notifications não suporta triggers com intervalo em horas, precisa transformar em segundos: X horas * 3600 segundos
-
-        const intervalSeconds = frequenciaQuantidade * 3600;
-
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '🔔 Hora do medicamento!',
-            body: `Tome seu medicamento: ${titulo}`,
-            sound: 'default',
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            data: { medicamentoId: idMedicamento },
-          },
-          trigger: {
-            seconds: intervalSeconds,
-            repeats: true,
-            channelId: 'medicamentos',
-          },
-        });
-
-      } else if (frequenciaTipo === 'semana') {
-
-        for (const dia of diasSemanaSelecionados) {
-          // De 0 (domingo) a 6 (sábado)
-
-          // Calcular a próxima data que cai nesse dia da semana a partir de hoje
-          const agora = new Date();
-          const proximoDia = new Date(agora);
-
-          // Definir o horário para a notificação no dia escolhido
-          proximoDia.setHours(dataInicio.getHours(), dataInicio.getMinutes(), 0, 0);
-
-          // Calcular diferença de dias para o dia da semana
-          const diff = (dia + 7 - proximoDia.getDay()) % 7;
-          if (diff === 0 && proximoDia <= agora) {
-            // Se for hoje mas horário já passou, agenda para a próxima semana
-            proximoDia.setDate(proximoDia.getDate() + 7);
-          } else {
-            proximoDia.setDate(proximoDia.getDate() + diff);
-          }
-
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: '🔔 Hora do medicamento!',
-              body: `Tome seu medicamento: ${titulo}`,
-              sound: 'default',
-              priority: Notifications.AndroidNotificationPriority.HIGH,
-              data: { medicamentoId: idMedicamento },
-            },
-            trigger: {
-              weekday: dia + 1, // 1=domingo, 7=sábado
-              hour: dataInicio.getHours(),
-              minute: dataInicio.getMinutes(),
-              repeats: true,
-              channelId: 'medicamentos',
-            },
-          });
-        }
-      }
-    }
-  }
 
   const handleSave = async () => {
     try {
@@ -267,14 +144,21 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         userId: user.uid,
       });
 
-      // Agendar notificação para o horário definido
-      await agendarNotificacao(
-        dataInicio,
+      const json = await AsyncStorage.getItem('lembretes');
+      const lembretes = json ? JSON.parse(json) : [];
+
+      const novoLembrete = {
         titulo,
+        dataHoraInicio: dataInicio.toISOString(),
         frequenciaTipo,
         frequenciaQuantidade,
-        diasSemanaSelecionados,
-        docRef.id);
+        diasSemanaSelecionados
+      };
+
+      lembretes.push(novoLembrete);
+       await AsyncStorage.setItem('lembretes', JSON.stringify(lembretes));
+
+
 
       // Reseta os campos
       setTitulo('');
