@@ -11,6 +11,7 @@ import { Image } from 'react-native';
 import Modal from 'react-native-modal';
 import { RootStackParamList } from '../types/types';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -53,7 +54,7 @@ export default function EditarMedicamento({ navigation }: Props) {
 
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-  const [imagem, setImagem] = useState<string | null>(null);
+  const [imagem, setImagem] = useState<string | null>(medicamento?.imagem || null);
   const [isImageOptionsVisible, setImageOptionsVisible] = useState(false);
   const [isFreqInputVisible, setFreqInputVisible] = useState(false);
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
@@ -103,6 +104,26 @@ export default function EditarMedicamento({ navigation }: Props) {
     }
   };
 
+  const uploadImagem = async (uri: string, userId: string, medicamentoId: string) => {
+    try {
+      const response = await fetch(uri); // ← forma compatível com React Native
+      const blob = await response.blob();
+  
+      const storage = getStorage();
+      const imageRef = ref(storage, `imagens_medicamentos/${userId}/${medicamentoId}`);
+  
+      await uploadBytes(imageRef, blob);
+      const downloadURL = await getDownloadURL(imageRef);
+  
+      return downloadURL;
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      throw error;
+    }
+  };
+  
+  
+
   const handleSave = async () => {
     try {
       const user = getAuth().currentUser;
@@ -126,6 +147,27 @@ export default function EditarMedicamento({ navigation }: Props) {
       
       const medicamentoDocRef = doc(db, 'medicamentos', medicamento.id);
 
+      let imagemURL = null;
+
+      if (imagem && !imagem.startsWith('http')) {
+        // Nova imagem foi escolhida
+        imagemURL = await uploadImagem(imagem, user.uid, medicamento.id);
+      } else if (imagem && imagem.startsWith('http')) {
+        // Mantém imagem já existente
+        imagemURL = imagem;
+      } else if (!imagem && medicamento.imagem) {
+        // Imagem foi removida — excluir do Storage
+        const storage = getStorage();
+        const imageRef = ref(storage, `imagens_medicamentos/${user.uid}/${medicamento.id}`);
+        try {
+          await deleteObject(imageRef);
+          console.log('Imagem removida');
+        } catch (error) {
+          console.warn('Erro ao remover imagem:', error);
+        }
+      }
+
+
       await updateDoc(medicamentoDocRef, {
         titulo: titulo,
         cor: cor,
@@ -133,6 +175,7 @@ export default function EditarMedicamento({ navigation }: Props) {
         diasSemanaSelecionados: diasSemanaSelecionados,
         frequenciaQuantidade: frequenciaQuantidade,
         frequenciaTipo: frequenciaTipo,
+        imagem: imagemURL,
       });
 
       Alert.alert('Sucesso', 'Lembrete salvo com sucesso!');

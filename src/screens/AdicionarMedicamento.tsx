@@ -17,6 +17,9 @@ import { Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import * as FileSystem from 'expo-file-system';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -104,6 +107,123 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     }
   };
 
+  const uploadImagem = async (uri: string, userId: string): Promise<string> => {
+    const storage = getStorage();
+
+    // Converte a imagem local para blob
+    const uriToBlob = (uri: string): Promise<Blob> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          resolve(xhr.response);
+        };
+        xhr.onerror = () => {
+          reject(new Error('Erro ao converter imagem em blob'));
+        };
+        xhr.responseType = 'blob';
+        xhr.open('GET', uri, true);
+        xhr.send(null);
+      });
+    };
+
+    const blob = await uriToBlob(uri);
+    const imageName = `medicamentos/${userId}/${Date.now()}.jpg`;
+    const imageRef = ref(storage, imageName);
+
+    await uploadBytes(imageRef, blob);
+    const downloadURL = await getDownloadURL(imageRef);
+    return downloadURL;
+  };
+
+  async function agendarNotificacao(
+    dataInicio: Date,
+    titulo: string,
+    frequenciaTipo: 'diaria' | 'horas' | 'semana',
+    frequenciaQuantidade: number,
+    diasSemanaSelecionados: number[],
+    idMedicamento: string
+  ) {
+    console.log('Data início (hora local):', dataInicio.toLocaleString());
+
+    {
+      if (frequenciaTipo === 'diaria') {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '🔔 Hora do medicamento!',
+            body: `Tome seu medicamento: ${titulo}`,
+            sound: 'default',
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            data: { medicamentoId: idMedicamento },
+          },
+          trigger: {
+            hour: dataInicio.getHours(),
+            minute: dataInicio.getMinutes(),
+            repeats: true,
+            channelId: 'medicamentos',
+          },
+        });
+
+      } else if (frequenciaTipo === 'horas') {
+        // Expo Notifications não suporta triggers com intervalo em horas, precisa transformar em segundos: X horas * 3600 segundos
+
+        const intervalSeconds = frequenciaQuantidade * 3600;
+
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '🔔 Hora do medicamento!',
+            body: `Tome seu medicamento: ${titulo}`,
+            sound: 'default',
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            data: { medicamentoId: idMedicamento },
+          },
+          trigger: {
+            seconds: intervalSeconds,
+            repeats: true,
+            channelId: 'medicamentos',
+          },
+        });
+
+      } else if (frequenciaTipo === 'semana') {
+
+        for (const dia of diasSemanaSelecionados) {
+          // De 0 (domingo) a 6 (sábado)
+
+          // Calcular a próxima data que cai nesse dia da semana a partir de hoje
+          const agora = new Date();
+          const proximoDia = new Date(agora);
+
+          // Definir o horário para a notificação no dia escolhido
+          proximoDia.setHours(dataInicio.getHours(), dataInicio.getMinutes(), 0, 0);
+
+          // Calcular diferença de dias para o dia da semana
+          const diff = (dia + 7 - proximoDia.getDay()) % 7;
+          if (diff === 0 && proximoDia <= agora) {
+            // Se for hoje mas horário já passou, agenda para a próxima semana
+            proximoDia.setDate(proximoDia.getDate() + 7);
+          } else {
+            proximoDia.setDate(proximoDia.getDate() + diff);
+          }
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '🔔 Hora do medicamento!',
+              body: `Tome seu medicamento: ${titulo}`,
+              sound: 'default',
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+              data: { medicamentoId: idMedicamento },
+            },
+            trigger: {
+              weekday: dia + 1, // 1=domingo, 7=sábado
+              hour: dataInicio.getHours(),
+              minute: dataInicio.getMinutes(),
+              repeats: true,
+              channelId: 'medicamentos',
+            },
+          });
+        }
+      }
+    }
+  }
 
   const handleSave = async () => {
     try {
@@ -132,6 +252,11 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       dataInicio.setSeconds(0);
       dataInicio.setMilliseconds(0);
 
+      let imageUrl = null;
+      if (imagem) {
+        imageUrl = await uploadImagem(imagem, user.uid);
+      }
+
 
       // Adiciona a tarefa no Firestore
       const docRef = await addDoc(collection(db, "medicamentos"), {
@@ -141,6 +266,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         frequenciaQuantidade,
         diasSemanaSelecionados,
         cor: cor,
+        imagem: imageUrl,
         userId: user.uid,
       });
 

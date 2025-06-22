@@ -24,6 +24,9 @@ import { TabParamList, RootStackParamList } from '../types/types';
 import { iniciarBackgroundFetch } from '../backgroundTask/backgroundTasks';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'react-native';
+import ConfirmDelete from '../components/ConfirmDelete';
+
 
 
 type HomeNavigationProp = CompositeNavigationProp<
@@ -40,6 +43,9 @@ const { width, height } = Dimensions.get('window');
 export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
   const [medicamentos, setMedicamentos] = useState<any[]>([]);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedIdToDelete, setSelectedIdToDelete] = useState<string | null>(null);
+
 
   useEffect(() => {
     configurarCanalNotificacoes();
@@ -75,10 +81,14 @@ export default function Home({ navigation }: Props) {
           const medicamentosRef = collection(db, 'medicamentos');
           const q = query(medicamentosRef, where('userId', '==', user.uid));
           const medicamentosSnapshot = await getDocs(q);
-          const medicamentosList = medicamentosSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
+          const medicamentosList = medicamentosSnapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              imagem: data.imagem || null, 
+              ...data,
+          };
+          });
           setMedicamentos(medicamentosList);
         } catch (error) {
           Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
@@ -89,6 +99,7 @@ export default function Home({ navigation }: Props) {
       fetchMedicamentos();
     }, [])
   );
+
 
   const handleDelete = async (id: string) => {
     try {
@@ -107,6 +118,30 @@ export default function Home({ navigation }: Props) {
     }
   };
 
+  const confirmDelete = (id: string) => {
+  setSelectedIdToDelete(id);
+  setDeleteModalVisible(true);
+};
+
+const handleConfirmDelete = async () => {
+  if (!selectedIdToDelete) return;
+
+  try {
+    await deleteDoc(doc(db, 'medicamentos', selectedIdToDelete));
+    setMedicamentos((prev) =>
+      prev.filter((med) => med.id !== selectedIdToDelete)
+    );
+    Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
+  } catch (error) {
+    Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
+    console.error(error);
+  } finally {
+    setDeleteModalVisible(false);
+    setSelectedIdToDelete(null);
+  }
+};
+
+
 
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
@@ -114,6 +149,11 @@ export default function Home({ navigation }: Props) {
       onPress={() => navigation.navigate('EditarMedicamento', { medicamento: item })}
     >
       <View style={styles.cardIcon}>
+        {item.imagem ? (
+          <Image source={{ uri: item.imagem }} style={styles.cardImage} />
+        ) : (
+          <Ionicons name="medkit" size={24} color="#000" />
+       )}
       </View>
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
@@ -126,11 +166,12 @@ export default function Home({ navigation }: Props) {
       <TouchableOpacity
         onPress={(event) => {
           event.stopPropagation();
-          handleDelete(item.id);
-        }}
-      >
+          confirmDelete(item.id);
+            }}
+          >
         <Ionicons name="trash" size={20} color="#000" />
       </TouchableOpacity>
+
     </TouchableOpacity>
   );
 
@@ -154,6 +195,12 @@ export default function Home({ navigation }: Props) {
           contentContainerStyle={{ paddingBottom: 80 }}
         />
       </View>
+        <ConfirmDelete
+          visible={deleteModalVisible}
+          onCancel={() => setDeleteModalVisible(false)}
+          onConfirm={handleConfirmDelete}
+        />
+
     </View>
   );
 }
@@ -220,4 +267,10 @@ const styles = StyleSheet.create({
     bottom: 30,
     right: 30,
   },
+  cardImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    resizeMode: 'cover',
+  },  
 });
