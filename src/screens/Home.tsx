@@ -23,6 +23,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList, RootStackParamList } from '../types/types';
 import { iniciarBackgroundFetch } from '../backgroundTask/backgroundTasks';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 type HomeNavigationProp = CompositeNavigationProp<
@@ -91,6 +92,12 @@ export default function Home({ navigation }: Props) {
 
   const handleDelete = async (id: string) => {
     try {
+      const json = await AsyncStorage.getItem('lembretes');
+      if (json) {
+        const lembretes = JSON.parse(json);
+        const updatedLembretes = lembretes.filter((lembrete: any) => lembrete.id !== id);
+        await AsyncStorage.setItem('lembretes', JSON.stringify(updatedLembretes));
+      }
       await deleteDoc(doc(db, 'medicamentos', id));
       setMedicamentos((prev) => prev.filter((tarefa) => tarefa.id !== id));
       Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
