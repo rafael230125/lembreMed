@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView, Linking } from 'react-native';
 import CustomButton from '../components/CustomButton';
+import CustomInputZoom from '../components/CustomInputZoom';
 import CustomInput from '../components/CustomInput';
 import { db } from '../services/firebaseConfig';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
@@ -12,6 +13,9 @@ import Modal from 'react-native-modal';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../types/types';
 import * as Notifications from 'expo-notifications';
+import { Button } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as FileSystem from 'expo-file-system';
@@ -33,40 +37,29 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [dataHoraInicio, setDataHoraInicio] = useState(new Date());
   const [isFreqInputVisible, setFreqInputVisible] = useState(false);
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalBuscarMedicamento, setModalBuscarMedicamento] = useState('');
+  const [bulaDisponivel, setBulaDisponivel] = useState(false);
+  const [bulaUrl, setBulaUrl] = useState('');
+  const [medicamentosFirebase, setMedicamentosFirebase] = useState<any[]>([]);
 
   useEffect(() => {
-    async function criarCanal() {
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('medicamentos', {
-          name: 'Lembretes de Medicamento',
-          importance: Notifications.AndroidImportance.HIGH,
-          sound: 'default',
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-        });
-      }
+  async function carregarMedicamentos() {
+    try {
+      const snapshot = await getDocs(collection(db, 'bula')); // substitua pelo nome real da coleção
+      const lista = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setMedicamentosFirebase(lista);
+    } catch (error) {
+      console.error('Erro ao buscar medicamentos:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
     }
-    criarCanal();
-  }, []);
+  }
 
-  useEffect(() => {
-    async function registrarPushNotification() {
-      const { status } = await Notifications.requestPermissionsAsync();
-
-      if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'Você não receberá as notificações.');
-        return;
-      }
-
-      // const token = (await Notifications.getExpoPushTokenAsync()).data;
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId: 'SEU_PROJECT_ID_AQUI',
-      });
-      console.log('Expo Push Token:', token);
-    }
-
-    registrarPushNotification();
-  }, []);
+  carregarMedicamentos();
+}, []);
 
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -277,14 +270,21 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         userId: user.uid,
       });
 
-      // Agendar notificação para o horário definido
-      await agendarNotificacao(
-        dataInicio,
+      const json = await AsyncStorage.getItem('lembretes');
+      const lembretes = json ? JSON.parse(json) : [];
+
+      const novoLembrete = {
         titulo,
+        dataHoraInicio: dataInicio.toISOString(),
         frequenciaTipo,
         frequenciaQuantidade,
-        diasSemanaSelecionados,
-        docRef.id);
+        diasSemanaSelecionados
+      };
+
+      lembretes.push(novoLembrete);
+       await AsyncStorage.setItem('lembretes', JSON.stringify(lembretes));
+
+
 
       // Reseta os campos
       setTitulo('');
@@ -299,7 +299,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       Alert.alert('Sucesso', 'Lembrete salvo com sucesso!');
       navigation.goBack();
     } catch (error) {
-      console.error('Erro ao salvar o lembrete:', error);
       Alert.alert('Erro', 'Não foi possível salvar o lembrete.');
     }
   };
@@ -319,20 +318,99 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     }
   };
 
+  const abrirModal = () => setModalVisible(true);
+  const fecharModal = () => setModalVisible(false);
+  
+
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.outerContainer}>
+    
+    <ScrollView 
+      contentContainerStyle={styles.scrollContainer} >
+      
         <View style={styles.container}>
+          <Modal isVisible={modalVisible} style={{marginVertical:70, minHeight: height * 0.7}} onBackdropPress={() => setModalVisible(false)}>
+                <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
+                  <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
+                    <CustomInput 
+                      value={modalBuscarMedicamento}
+                      onChangeText={setModalBuscarMedicamento}
+                      placeholder="Digite o nome do medicamento"
+                      placeholderTextColor="#aaa"
+                    />
+
+                    {medicamentosFirebase
+                      .filter(medicamento => medicamento.medicamento.toLowerCase().includes(modalBuscarMedicamento.toLowerCase()))
+                      .map((medicamento: any) => (
+                        <TouchableOpacity
+                          key={medicamento.id}
+                          style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
+                          onPress={() => {
+                            setTitulo(medicamento.medicamento);
+                            setFrequenciaTipo(medicamento.frequencia);
+                            if (medicamento.frequencia == 'horas') {
+                              setFreqInputText(String(medicamento.intervalo));
+                            }
+                            fecharModal();
+                            if (medicamento.bula) {
+                              setBulaDisponivel(true);
+                              setBulaUrl(medicamento.urlBula); 
+                            } else {
+                              setBulaDisponivel(false);
+                              setBulaUrl('');
+                            }
+                                setImagem(medicamento.img); 
+
+                          }}
+                        >
+                          <Text style={{ fontSize: 16 }}>{medicamento.medicamento}</Text>
+                          {medicamento.bula ? (
+                            <Text style={{ color: 'green' }}>Bula disponível</Text>
+                          ) : (
+                            <Text style={{ color: 'red' }}>Bula não disponível</Text>
+                          )}
+
+                          
+                        </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+          </Modal>
           <Text style={styles.title}>Adicionar medicamento</Text>
+          <View style={styles.outerContainer}>
+            <Text style={styles.label}>Nome:</Text>
+          <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent:'center', height:'auto'}}>
+              
+              <CustomInputZoom
+                value={titulo}
+                onChangeText={setTitulo}
+                placeholder="Digite o nome"
+                placeholderTextColor="#aaa"
+              />
+              <TouchableOpacity onPress={abrirModal} style={{ padding: 8 , alignItems: 'center', marginTop: -16}}>
+                <Image
+                  source={require('../../assets/lupa.png')}
+                  style={{ width: 28, height: 28}}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
 
-          <Text style={styles.label}>Nome:</Text>
-          <CustomInput
-            value={titulo}
-            onChangeText={setTitulo}
-            placeholder="Digite o nome"
-            placeholderTextColor="#aaa"
-          />
+          </View>
 
+          {bulaDisponivel && (
+            <TouchableOpacity
+              onPress={() => {
+                if (bulaUrl) {
+                  Linking.openURL(bulaUrl);
+                } else {
+                  Alert.alert('Bula não disponível', 'Desculpe, a bula deste medicamento não está disponível.');
+                }
+              }}
+              style={{ marginBottom: 20 }}
+            >
+              <Text style={{ color: '#007BFF' }}>Ver bula do medicamento</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.label}>Data de Início:</Text>
           <TouchableOpacity
             style={styles.info}
@@ -340,6 +418,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
           >
             <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
           </TouchableOpacity>
+          
 
           <DateTimePickerModal
             isVisible={datePickerVisible}
@@ -464,7 +543,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
               <Text style={styles.imagePlaceholderText}>Toque para adicionar imagem</Text>
             )}
           </TouchableOpacity>
-
+          
           <Modal
             isVisible={isImageOptionsVisible}
             onBackdropPress={() => setImageOptionsVisible(false)}

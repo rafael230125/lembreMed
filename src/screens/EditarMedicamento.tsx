@@ -143,6 +143,8 @@ export default function EditarMedicamento({ navigation }: Props) {
         return;
       }
 
+
+      
       const medicamentoDocRef = doc(db, 'medicamentos', medicamento.id);
 
       let imagemURL = null;

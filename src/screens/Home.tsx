@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SearchBar from '../components/SearchBar';
@@ -20,8 +21,12 @@ import { format } from 'date-fns';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList, RootStackParamList } from '../types/types';
+import { iniciarBackgroundFetch } from '../backgroundTask/backgroundTasks';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'react-native';
 import ConfirmDelete from '../components/ConfirmDelete';
+
 
 
 type HomeNavigationProp = CompositeNavigationProp<
@@ -42,6 +47,26 @@ export default function Home({ navigation }: Props) {
   const [selectedIdToDelete, setSelectedIdToDelete] = useState<string | null>(null);
 
 
+  useEffect(() => {
+    configurarCanalNotificacoes();
+    const requestPermissionsAndStartFetch = async () => {
+      await Notifications.requestPermissionsAsync();
+      iniciarBackgroundFetch(); 
+    };
+    requestPermissionsAndStartFetch();
+  }, []);
+
+  async function configurarCanalNotificacoes() {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('medicamentos', {
+      name: 'Lembretes de Medicamentos',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+      });
+    }
+  }
   useFocusEffect(
     useCallback(() => {
       const fetchMedicamentos = async () => {
@@ -75,6 +100,24 @@ export default function Home({ navigation }: Props) {
     }, [])
   );
 
+
+  const handleDelete = async (id: string) => {
+    try {
+      const json = await AsyncStorage.getItem('lembretes');
+      if (json) {
+        const lembretes = JSON.parse(json);
+        const updatedLembretes = lembretes.filter((lembrete: any) => lembrete.id !== id);
+        await AsyncStorage.setItem('lembretes', JSON.stringify(updatedLembretes));
+      }
+      await deleteDoc(doc(db, 'medicamentos', id));
+      setMedicamentos((prev) => prev.filter((tarefa) => tarefa.id !== id));
+      Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
+      console.error(error);
+    }
+  };
+
   const confirmDelete = (id: string) => {
   setSelectedIdToDelete(id);
   setDeleteModalVisible(true);
@@ -97,6 +140,7 @@ const handleConfirmDelete = async () => {
     setSelectedIdToDelete(null);
   }
 };
+
 
 
   const renderItem = ({ item }: any) => (

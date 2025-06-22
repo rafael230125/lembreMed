@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { iniciarBackgroundFetch } from '../backgroundTask/backgroundTasks';
 
 type UserData = {
   uid?: string;
@@ -35,7 +36,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const resetUserData = () => {
     setUserData({});
   };
-
+  useEffect(() => {iniciarBackgroundFetch();}, []);
   return (
     <UserContext.Provider value={{ userData, setUserData, updateUserField, resetUserData }}>
       {children}
