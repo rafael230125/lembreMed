@@ -146,13 +146,10 @@ export default function EditarMedicamento({ navigation }: Props) {
       let imagemURL = null;
 
       if (imagem && !imagem.startsWith('http')) {
-        // Nova imagem foi escolhida
         imagemURL = await uploadImagem(imagem, user.uid, medicamento.id);
       } else if (imagem && imagem.startsWith('http')) {
-        // Mantém imagem já existente
         imagemURL = imagem;
       } else if (!imagem && medicamento.imagem) {
-        // Imagem foi removida — excluir do Storage
         const storage = getStorage();
         const imageRef = ref(storage, `imagens_medicamentos/${user.uid}/${medicamento.id}`);
         try {

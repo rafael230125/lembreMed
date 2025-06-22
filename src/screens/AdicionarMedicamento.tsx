@@ -309,55 +309,54 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const fecharModal = () => setModalVisible(false);
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContainer} >
-      <View style={styles.container}>
-        <Modal isVisible={modalVisible} style={{ marginVertical: 70, minHeight: height * 0.7 }} onBackdropPress={() => setModalVisible(false)}>
-          <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
-              <CustomInput
-                value={modalBuscarMedicamento}
-                onChangeText={setModalBuscarMedicamento}
-                placeholder="Digite o nome do medicamento"
-                placeholderTextColor="#aaa"
-              />
-              {medicamentosFirebase
-                .filter(medicamento => medicamento.medicamento.toLowerCase().includes(modalBuscarMedicamento.toLowerCase()))
-                .map((medicamento: any) => (
-                  <TouchableOpacity
-                    key={medicamento.id}
-                    style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
-                    onPress={() => {
-                      setTitulo(medicamento.medicamento);
-                      setFrequenciaTipo(medicamento.frequencia);
-                      if (medicamento.frequencia == 'horas') {
-                        setFreqInputText(String(medicamento.intervalo));
-                      }
-                      fecharModal();
-                      if (medicamento.bula) {
-                        setBulaDisponivel(true);
-                        setBulaUrl(medicamento.urlBula);
-                      } else {
-                        setBulaDisponivel(false);
-                        setBulaUrl('');
-                      }
-                      setImagem(medicamento.img);
+    <ScrollView contentContainerStyle={styles.scrollContainer} >
+      <View style={styles.outerContainer}>
+        <View style={styles.container}>
+          <Modal isVisible={modalVisible} style={{ marginVertical: 70, minHeight: height * 0.7 }} onBackdropPress={() => setModalVisible(false)}>
+            <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
+              <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
+                <CustomInput
+                  value={modalBuscarMedicamento}
+                  onChangeText={setModalBuscarMedicamento}
+                  placeholder="Digite o nome do medicamento"
+                  placeholderTextColor="#aaa"
+                />
+                {medicamentosFirebase
+                  .filter(medicamento => medicamento.medicamento.toLowerCase().includes(modalBuscarMedicamento.toLowerCase()))
+                  .map((medicamento: any) => (
+                    <TouchableOpacity
+                      key={medicamento.id}
+                      style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
+                      onPress={() => {
+                        setTitulo(medicamento.medicamento);
+                        setFrequenciaTipo(medicamento.frequencia);
+                        if (medicamento.frequencia == 'horas') {
+                          setFreqInputText(String(medicamento.intervalo));
+                        }
+                        fecharModal();
+                        if (medicamento.bula) {
+                          setBulaDisponivel(true);
+                          setBulaUrl(medicamento.urlBula);
+                        } else {
+                          setBulaDisponivel(false);
+                          setBulaUrl('');
+                        }
+                        setImagem(medicamento.img);
 
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>{medicamento.medicamento}</Text>
-                    {medicamento.bula ? (
-                      <Text style={{ color: 'green' }}>Bula disponível</Text>
-                    ) : (
-                      <Text style={{ color: 'red' }}>Bula não disponível</Text>
-                    )}
-                  </TouchableOpacity>
-                ))}
-            </ScrollView>
-          </View>
-        </Modal>
-        <Text style={styles.title}>Adicionar medicamento</Text>
-        <View style={styles.outerContainer}>
+                      }}
+                    >
+                      <Text style={{ fontSize: 16 }}>{medicamento.medicamento}</Text>
+                      {medicamento.bula ? (
+                        <Text style={{ color: 'green' }}>Bula disponível</Text>
+                      ) : (
+                        <Text style={{ color: 'red' }}>Bula não disponível</Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+              </ScrollView>
+            </View>
+          </Modal>
+          <Text style={styles.title}>Adicionar medicamento</Text>
           <Text style={styles.label}>Nome:</Text>
           <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent: 'center', height: 'auto' }}>
 
