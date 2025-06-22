@@ -106,23 +106,21 @@ export default function EditarMedicamento({ navigation }: Props) {
 
   const uploadImagem = async (uri: string, userId: string, medicamentoId: string) => {
     try {
-      const response = await fetch(uri); // ← forma compatível com React Native
+      const response = await fetch(uri);
       const blob = await response.blob();
-  
+
       const storage = getStorage();
       const imageRef = ref(storage, `imagens_medicamentos/${userId}/${medicamentoId}`);
-  
+
       await uploadBytes(imageRef, blob);
       const downloadURL = await getDownloadURL(imageRef);
-  
+
       return downloadURL;
     } catch (error) {
       console.error('Erro ao fazer upload da imagem:', error);
       throw error;
     }
   };
-  
-  
 
   const handleSave = async () => {
     try {
@@ -143,8 +141,6 @@ export default function EditarMedicamento({ navigation }: Props) {
         return;
       }
 
-
-      
       const medicamentoDocRef = doc(db, 'medicamentos', medicamento.id);
 
       let imagemURL = null;
@@ -166,7 +162,6 @@ export default function EditarMedicamento({ navigation }: Props) {
           console.warn('Erro ao remover imagem:', error);
         }
       }
-
 
       await updateDoc(medicamentoDocRef, {
         titulo: titulo,

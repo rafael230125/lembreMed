@@ -27,8 +27,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'react-native';
 import ConfirmDelete from '../components/ConfirmDelete';
 
-
-
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
   StackNavigationProp<RootStackParamList>
@@ -51,19 +49,19 @@ export default function Home({ navigation }: Props) {
     configurarCanalNotificacoes();
     const requestPermissionsAndStartFetch = async () => {
       await Notifications.requestPermissionsAsync();
-      iniciarBackgroundFetch(); 
+      iniciarBackgroundFetch();
     };
     requestPermissionsAndStartFetch();
   }, []);
 
   async function configurarCanalNotificacoes() {
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('medicamentos', {
-      name: 'Lembretes de Medicamentos',
-      importance: Notifications.AndroidImportance.HIGH,
-      sound: 'default',
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('medicamentos', {
+        name: 'Lembretes de Medicamentos',
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: 'default',
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
       });
     }
   }
@@ -85,9 +83,9 @@ export default function Home({ navigation }: Props) {
             const data = doc.data();
             return {
               id: doc.id,
-              imagem: data.imagem || null, 
+              imagem: data.imagem || null,
               ...data,
-          };
+            };
           });
           setMedicamentos(medicamentosList);
         } catch (error) {
@@ -99,7 +97,6 @@ export default function Home({ navigation }: Props) {
       fetchMedicamentos();
     }, [])
   );
-
 
   const handleDelete = async (id: string) => {
     try {
@@ -119,27 +116,27 @@ export default function Home({ navigation }: Props) {
   };
 
   const confirmDelete = (id: string) => {
-  setSelectedIdToDelete(id);
-  setDeleteModalVisible(true);
-};
+    setSelectedIdToDelete(id);
+    setDeleteModalVisible(true);
+  };
 
-const handleConfirmDelete = async () => {
-  if (!selectedIdToDelete) return;
+  const handleConfirmDelete = async () => {
+    if (!selectedIdToDelete) return;
 
-  try {
-    await deleteDoc(doc(db, 'medicamentos', selectedIdToDelete));
-    setMedicamentos((prev) =>
-      prev.filter((med) => med.id !== selectedIdToDelete)
-    );
-    Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
-  } catch (error) {
-    Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
-    console.error(error);
-  } finally {
-    setDeleteModalVisible(false);
-    setSelectedIdToDelete(null);
-  }
-};
+    try {
+      await deleteDoc(doc(db, 'medicamentos', selectedIdToDelete));
+      setMedicamentos((prev) =>
+        prev.filter((med) => med.id !== selectedIdToDelete)
+      );
+      Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível excluir o lembrete.');
+      console.error(error);
+    } finally {
+      setDeleteModalVisible(false);
+      setSelectedIdToDelete(null);
+    }
+  };
 
 
 
@@ -153,7 +150,7 @@ const handleConfirmDelete = async () => {
           <Image source={{ uri: item.imagem }} style={styles.cardImage} />
         ) : (
           <Ionicons name="medkit" size={24} color="#000" />
-       )}
+        )}
       </View>
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
@@ -167,8 +164,8 @@ const handleConfirmDelete = async () => {
         onPress={(event) => {
           event.stopPropagation();
           confirmDelete(item.id);
-            }}
-          >
+        }}
+      >
         <Ionicons name="trash" size={20} color="#000" />
       </TouchableOpacity>
 
@@ -195,11 +192,11 @@ const handleConfirmDelete = async () => {
           contentContainerStyle={{ paddingBottom: 80 }}
         />
       </View>
-        <ConfirmDelete
-          visible={deleteModalVisible}
-          onCancel={() => setDeleteModalVisible(false)}
-          onConfirm={handleConfirmDelete}
-        />
+      <ConfirmDelete
+        visible={deleteModalVisible}
+        onCancel={() => setDeleteModalVisible(false)}
+        onConfirm={handleConfirmDelete}
+      />
 
     </View>
   );
@@ -272,5 +269,5 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     resizeMode: 'cover',
-  },  
+  },
 });
