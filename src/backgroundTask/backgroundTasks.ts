@@ -42,34 +42,34 @@ TaskManager.defineTask(BACKGROUND_TASK_NAME, async () => {
 
       if (horaCerta) {
         if (Platform.OS === 'android') {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '💊 Hora do medicamento!',
-            body: `Tome o medicamento: ${lembrete.titulo}`,
-            sound: 'default',
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            data: { medicamentoId: lembrete.id || null },
-          },
-          trigger: {
-            seconds: 1, 
-            channelId: 'medicamentos',
-            repeats: true
-          }
-        });
-      } else{
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '💊 Hora do medicamento!',
-            body: `Tome o medicamento: ${lembrete.titulo}`,
-            sound: 'default',
-            data: { medicamentoId: lembrete.id || null },
-          },
-          trigger: null, // Dispara imediatamente
-        });
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '💊 Hora do medicamento!',
+              body: `Tome o medicamento: ${lembrete.titulo}`,
+              sound: 'default',
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+              data: { medicamentoId: lembrete.id || null },
+            },
+            trigger: {
+              seconds: 1,
+              channelId: 'medicamentos',
+              repeats: true
+            }
+          });
+        } else {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '💊 Hora do medicamento!',
+              body: `Tome o medicamento: ${lembrete.titulo}`,
+              sound: 'default',
+              data: { medicamentoId: lembrete.id || null },
+            },
+            trigger: null, // Dispara imediatamente
+          });
+        }
       }
+      return BackgroundFetchResult.NewData;
     }
-    return BackgroundFetchResult.NewData;
-  } 
   } catch (error) {
     return BackgroundFetchResult.Failed;
   }

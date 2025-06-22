@@ -44,22 +44,22 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [medicamentosFirebase, setMedicamentosFirebase] = useState<any[]>([]);
 
   useEffect(() => {
-  async function carregarMedicamentos() {
-    try {
-      const snapshot = await getDocs(collection(db, 'bula')); // substitua pelo nome real da coleção
-      const lista = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setMedicamentosFirebase(lista);
-    } catch (error) {
-      console.error('Erro ao buscar medicamentos:', error);
-      Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
+    async function carregarMedicamentos() {
+      try {
+        const snapshot = await getDocs(collection(db, 'bula'));
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMedicamentosFirebase(lista);
+      } catch (error) {
+        console.error('Erro ao buscar medicamentos:', error);
+        Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
+      }
     }
-  }
 
-  carregarMedicamentos();
-}, []);
+    carregarMedicamentos();
+  }, []);
 
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -164,7 +164,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         });
 
       } else if (frequenciaTipo === 'horas') {
-        // Expo Notifications não suporta triggers com intervalo em horas, precisa transformar em segundos: X horas * 3600 segundos
 
         const intervalSeconds = frequenciaQuantidade * 3600;
 
@@ -186,19 +185,14 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       } else if (frequenciaTipo === 'semana') {
 
         for (const dia of diasSemanaSelecionados) {
-          // De 0 (domingo) a 6 (sábado)
 
-          // Calcular a próxima data que cai nesse dia da semana a partir de hoje
           const agora = new Date();
           const proximoDia = new Date(agora);
 
-          // Definir o horário para a notificação no dia escolhido
           proximoDia.setHours(dataInicio.getHours(), dataInicio.getMinutes(), 0, 0);
 
-          // Calcular diferença de dias para o dia da semana
           const diff = (dia + 7 - proximoDia.getDay()) % 7;
           if (diff === 0 && proximoDia <= agora) {
-            // Se for hoje mas horário já passou, agenda para a próxima semana
             proximoDia.setDate(proximoDia.getDate() + 7);
           } else {
             proximoDia.setDate(proximoDia.getDate() + diff);
@@ -213,7 +207,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
               data: { medicamentoId: idMedicamento },
             },
             trigger: {
-              weekday: dia + 1, // 1=domingo, 7=sábado
+              weekday: dia + 1,
               hour: dataInicio.getHours(),
               minute: dataInicio.getMinutes(),
               repeats: true,
@@ -234,7 +228,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         return;
       }
 
-      // Validação básica
       if (!titulo.trim()) {
         Alert.alert('Erro', 'Digite o nome do medicamento.');
         return;
@@ -245,7 +238,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         return;
       }
 
-      // Juntar dataHoraInicio com a hora selecionada 
       const dataInicio = new Date(dataHoraInicio);
       dataInicio.setHours(data.getHours());
       dataInicio.setMinutes(data.getMinutes());
@@ -257,8 +249,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         imageUrl = await uploadImagem(imagem, user.uid);
       }
 
-
-      // Adiciona a tarefa no Firestore
       const docRef = await addDoc(collection(db, "medicamentos"), {
         titulo: titulo,
         dataHoraInicio: dataInicio.toISOString(),
@@ -282,11 +272,8 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       };
 
       lembretes.push(novoLembrete);
-       await AsyncStorage.setItem('lembretes', JSON.stringify(lembretes));
+      await AsyncStorage.setItem('lembretes', JSON.stringify(lembretes));
 
-
-
-      // Reseta os campos
       setTitulo('');
       setFrequenciaTipo('diaria');
       setFrequenciaQuantidade(1);
@@ -320,80 +307,73 @@ export default function AdicionarMedicamento({ navigation }: Props) {
 
   const abrirModal = () => setModalVisible(true);
   const fecharModal = () => setModalVisible(false);
-  
-
 
   return (
-    
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={styles.scrollContainer} >
-      
-        <View style={styles.container}>
-          <Modal isVisible={modalVisible} style={{marginVertical:70, minHeight: height * 0.7}} onBackdropPress={() => setModalVisible(false)}>
-                <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
-                  <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
-                    <CustomInput 
-                      value={modalBuscarMedicamento}
-                      onChangeText={setModalBuscarMedicamento}
-                      placeholder="Digite o nome do medicamento"
-                      placeholderTextColor="#aaa"
-                    />
-
-                    {medicamentosFirebase
-                      .filter(medicamento => medicamento.medicamento.toLowerCase().includes(modalBuscarMedicamento.toLowerCase()))
-                      .map((medicamento: any) => (
-                        <TouchableOpacity
-                          key={medicamento.id}
-                          style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
-                          onPress={() => {
-                            setTitulo(medicamento.medicamento);
-                            setFrequenciaTipo(medicamento.frequencia);
-                            if (medicamento.frequencia == 'horas') {
-                              setFreqInputText(String(medicamento.intervalo));
-                            }
-                            fecharModal();
-                            if (medicamento.bula) {
-                              setBulaDisponivel(true);
-                              setBulaUrl(medicamento.urlBula); 
-                            } else {
-                              setBulaDisponivel(false);
-                              setBulaUrl('');
-                            }
-                                setImagem(medicamento.img); 
-
-                          }}
-                        >
-                          <Text style={{ fontSize: 16 }}>{medicamento.medicamento}</Text>
-                          {medicamento.bula ? (
-                            <Text style={{ color: 'green' }}>Bula disponível</Text>
-                          ) : (
-                            <Text style={{ color: 'red' }}>Bula não disponível</Text>
-                          )}
-
-                          
-                        </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-          </Modal>
-          <Text style={styles.title}>Adicionar medicamento</Text>
-          <View style={styles.outerContainer}>
-            <Text style={styles.label}>Nome:</Text>
-          <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent:'center', height:'auto'}}>
-              
-              <CustomInputZoom
-                value={titulo}
-                onChangeText={setTitulo}
-                placeholder="Digite o nome"
+      <View style={styles.container}>
+        <Modal isVisible={modalVisible} style={{ marginVertical: 70, minHeight: height * 0.7 }} onBackdropPress={() => setModalVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
+              <CustomInput
+                value={modalBuscarMedicamento}
+                onChangeText={setModalBuscarMedicamento}
+                placeholder="Digite o nome do medicamento"
                 placeholderTextColor="#aaa"
               />
-              <TouchableOpacity onPress={abrirModal} style={{ padding: 8 , alignItems: 'center', marginTop: -16}}>
-                <Image
-                  source={require('../../assets/lupa.png')}
-                  style={{ width: 28, height: 28}}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
+              {medicamentosFirebase
+                .filter(medicamento => medicamento.medicamento.toLowerCase().includes(modalBuscarMedicamento.toLowerCase()))
+                .map((medicamento: any) => (
+                  <TouchableOpacity
+                    key={medicamento.id}
+                    style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
+                    onPress={() => {
+                      setTitulo(medicamento.medicamento);
+                      setFrequenciaTipo(medicamento.frequencia);
+                      if (medicamento.frequencia == 'horas') {
+                        setFreqInputText(String(medicamento.intervalo));
+                      }
+                      fecharModal();
+                      if (medicamento.bula) {
+                        setBulaDisponivel(true);
+                        setBulaUrl(medicamento.urlBula);
+                      } else {
+                        setBulaDisponivel(false);
+                        setBulaUrl('');
+                      }
+                      setImagem(medicamento.img);
+
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>{medicamento.medicamento}</Text>
+                    {medicamento.bula ? (
+                      <Text style={{ color: 'green' }}>Bula disponível</Text>
+                    ) : (
+                      <Text style={{ color: 'red' }}>Bula não disponível</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+            </ScrollView>
+          </View>
+        </Modal>
+        <Text style={styles.title}>Adicionar medicamento</Text>
+        <View style={styles.outerContainer}>
+          <Text style={styles.label}>Nome:</Text>
+          <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent: 'center', height: 'auto' }}>
+
+            <CustomInputZoom
+              value={titulo}
+              onChangeText={setTitulo}
+              placeholder="Digite o nome"
+              placeholderTextColor="#aaa"
+            />
+            <TouchableOpacity onPress={abrirModal} style={{ padding: 8, alignItems: 'center', marginTop: -16 }}>
+              <Image
+                source={require('../../assets/lupa.png')}
+                style={{ width: 28, height: 28 }}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
 
           </View>
 
@@ -418,7 +398,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
           >
             <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
           </TouchableOpacity>
-          
+
 
           <DateTimePickerModal
             isVisible={datePickerVisible}
@@ -543,7 +523,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
               <Text style={styles.imagePlaceholderText}>Toque para adicionar imagem</Text>
             )}
           </TouchableOpacity>
-          
+
           <Modal
             isVisible={isImageOptionsVisible}
             onBackdropPress={() => setImageOptionsVisible(false)}
