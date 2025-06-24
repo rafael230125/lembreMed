@@ -36,3 +36,9 @@ npx expo start
 # ou, caso não use expo
 npx react-native run-android
 
+## 💻 Link da apresentação
+
+- [Apresentação](https://www.canva.com/design/DAGrGfDyTxo/Qf36zXRI7KAN0i9tyn6Fjw/edit?utm_content=DAGrGfDyTxo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+
+---
+
