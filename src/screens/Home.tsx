@@ -17,7 +17,6 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { getAuth } from "firebase/auth";
 import { query, where } from '../services/firebaseConfig';
 import { deleteDoc, doc } from 'firebase/firestore';
-import { format } from 'date-fns';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList, RootStackParamList } from '../types/types';
@@ -155,8 +154,6 @@ export default function Home({ navigation }: Props) {
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
         <Text style={styles.cardTime}>{item.dataHoraInicio
-          ? format(new Date(item.dataHoraInicio), 'dd/MM/yyyy HH:mm')
-          : ''
         }</Text>
       </View>
 
