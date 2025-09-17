@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { auth, db } from '../services/firebaseConfig';
+import { auth, db } from '@services/firebaseConfig';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import styles from './styles';
 
-import { TabParamList, RootStackParamList } from '../types/types';
+import { TabParamList, RootStackParamList } from '@typings/types';
 
 type PerfilNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Perfil'>,
@@ -107,78 +108,3 @@ export default function Perfil({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: width * 0.07,
-    paddingTop: height * 0.05,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: width * 0.05,
-    fontWeight: 'bold',
-    marginBottom: height * 0.04,
-    textAlign: 'center',
-  },
-  profileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: height * 0.03,
-  },
-  profileCircle: {
-    width: width * 0.15,
-    height: width * 0.15,
-    borderRadius: width * 0.1,
-    backgroundColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: width * 0.04,
-  },
-  profileImage: {
-    width: width * 0.15,
-    height: width * 0.15,
-    borderRadius: width * 0.1,
-  },
-  userInfo: {
-    justifyContent: 'center',
-  },
-  userName: {
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
-  },
-  userEmail: {
-    fontSize: width * 0.04,
-    color: '#777',
-  },
-  loadingText: {
-    fontSize: width * 0.04,
-    color: '#777',
-    textAlign: 'center',
-  },
-  optionsContainer: {
-    marginBottom: height * 0.03,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: height * 0.02,
-  },
-  optionText: {
-    marginLeft: width * 0.03,
-    fontSize: width * 0.04,
-  },
-  logoutOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: height * 0.02,
-    marginBottom: height * 0.12,
-  },
-  logoutText: {
-    marginLeft: width * 0.03,
-    fontSize: width * 0.04,
-  },
-});

@@ -1,10 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Home from '../screens/Home';
-import AdicionarMedicamento from '../screens/AdicionarMedicamento';
-import Perfil from '../screens/Perfil';
+import Home from '@screens/App/Home';
+import AdicionarMedicamento from '../screens/App/AdicionarMedicamento';
+import Perfil from '@screens/App/Perfil';
 import { Ionicons } from '@expo/vector-icons';
-import { TabParamList } from '../types/types';
+import { TabParamList } from '@typings/types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { RadioButton, Provider as PaperProvider } from 'react-native-paper';
-import CustomButton from '../components/CustomButton';
+import CustomButton from '@components/CustomButton';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types/types';
+import { RootStackParamList } from '@typings/types';
 import { getAuth, deleteUser } from 'firebase/auth';
 import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
+import styles from './styles';
 
 const { width, height } = Dimensions.get('window');
 
@@ -111,36 +112,3 @@ export default function EncerrarConta({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: width * 0.07,
-    paddingTop: height * 0.05,
-    backgroundColor: '#fff',
-  },
-  message: {
-    fontSize: width * 0.04,
-    fontWeight: 'bold',
-  },
-  optionsContainer: {
-    marginVertical: height * 0.02,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: height * 0.02,
-  },
-  optionText: {
-    marginLeft: width * 0.03,
-    fontSize: width * 0.04,
-  },
-  buttonContainer: {
-    marginBottom: height * 0.03,
-  },
-  customButton: {
-    marginTop: height * 0.04,
-    marginBottom: height * 0.1,
-    alignSelf: 'center',
-    backgroundColor: '#FF6363'
-  },
-});

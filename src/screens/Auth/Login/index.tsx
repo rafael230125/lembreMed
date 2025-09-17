@@ -1,14 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import CustomButton from '../components/CustomButton';
-import CustomInput from '../components/CustomInput';
+import CustomButton from '@components/CustomButton';
+import CustomInput from '@components/CustomInput';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types/types';
+import { RootStackParamList } from '@typings/types';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../services/firebaseConfig';
-import { useUserContext } from '../context/UserContext';
+import { auth, db } from '@services/firebaseConfig';
+import { useUserContext } from '@context/UserContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
+import styles from '@screens/Auth/styles';
 
 const { width, height } = Dimensions.get('window');
 
@@ -104,64 +105,3 @@ export default function Login({ navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-  },
-  outerContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: width * 0.1,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    paddingTop: height * 0.1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-  },
-  logo: {
-    width: width * 1,
-    height: height * 0.3
-  },
-  title: {
-    color: '#ACBC89',
-    fontSize: width * 0.06,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: '#000',
-    fontSize: width * 0.04,
-    fontWeight: 'bold',
-    marginBottom: 28,
-    width: '100%',
-    textAlign: 'left',
-  },
-  registerText: {
-    marginTop: 20,
-    color: '#858585',
-    fontSize: width * 0.04,
-    textAlign: 'center',
-  },
-  link: {
-    color: '#68BAE8',
-    fontWeight: 'bold',
-  },
-  footerContainer: {
-    marginTop: height * 0.15,
-  },
-  linkSobre: {
-    color: '#ACBC89',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  nomeText: {
-    marginTop: 20,
-    color: '#858585',
-    fontSize: width * 0.04,
-    textAlign: 'center',
-  },
-});

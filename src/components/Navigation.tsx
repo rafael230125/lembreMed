@@ -2,16 +2,16 @@ import React from 'react';
 import { Dimensions } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import Login from '../screens/Login';
-import Cadastro from '../screens/Cadastro';
-import Configuracao from '../screens/Configuracao';
-import MeuPerfil from '../screens/MeuPerfil';
-import EncerrarConta from '../screens/EncerrarConta';
-import EncerramentoConta from '../screens/EncerramentoConta';
-import InformacaoConta from '../screens/InformacaoConta';
-import EditarMedicamento from '../screens/EditarMedicamento';
-import TabNavigation from './TabNavigation';
-import { RootStackParamList } from '../types/types';
+import Login from '@screens/Auth/Login';
+import Cadastro from '@screens/Auth/Register';
+import Configuracao from '@screens/App/Configuracao';
+import MeuPerfil from '@screens/App/MeuPerfil';
+import EncerrarConta from '@screens/App/EncerrarConta';
+import EncerramentoConta from '@screens/App/EncerramentoConta';
+import InformacaoConta from '@screens/App/InformacaoConta';
+import EditarMedicamento from '@screens/App/EditarMedicamento';
+import TabNavigation from '@components/TabNavigation';
+import { RootStackParamList } from '@typings/types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
