@@ -24,6 +24,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'react-native';
 import ConfirmDelete from '@components/ConfirmDelete';
 import styles from './styles';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -148,8 +150,9 @@ export default function Home({ navigation }: Props) {
       </View>
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
-        <Text style={styles.cardTime}>{item.dataHoraInicio
-        }</Text>
+        <Text style={styles.cardTime}>
+          {format(new Date(item.dataHoraInicio), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+        </Text>
       </View>
 
       <TouchableOpacity
