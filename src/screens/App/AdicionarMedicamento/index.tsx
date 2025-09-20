@@ -369,7 +369,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             />
             <TouchableOpacity onPress={abrirModal} style={{ padding: 8, alignItems: 'center', marginTop: -16 }}>
               <Image
-                source={require('../../assets/lupa.png')}
+                source={require('../../../../assets/lupa.png')}
                 style={{ width: 28, height: 28 }}
                 resizeMode="contain"
               />

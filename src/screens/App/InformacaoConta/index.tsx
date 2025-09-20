@@ -131,7 +131,7 @@ export default function InformacaoConta({ navigation }: Props) {
               />
             ) : (
               <Image
-                source={require('../../assets/fotoPerfil.png')}
+                source={require('../../../../assets/fotoPerfil.png')}
                 style={styles.image}
                 resizeMode="cover"
               />

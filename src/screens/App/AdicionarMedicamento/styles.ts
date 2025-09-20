@@ -3,6 +3,7 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+
   scrollContainer: {
     flexGrow: 1,
   },
@@ -14,64 +15,147 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'flex-start',
-    paddingTop: height * 0.1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-  },
-  logo: {
-    width: width * 1,
-    height: height * 0.3
+    marginTop: height * 0.07,
   },
   title: {
-    color: '#ACBC89',
-    fontSize: width * 0.06,
+    fontSize: width * 0.05,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: height * 0.04,
     textAlign: 'center',
   },
-  subtitle: {
-    color: '#000',
-    fontSize: width * 0.04,
-    fontWeight: 'bold',
-    marginBottom: 28,
-    width: '100%',
-    textAlign: 'left',
-  },
-  registerText: {
-    marginTop: 20,
-    color: '#858585',
-    fontSize: width * 0.04,
-    textAlign: 'center',
-  },
-  link: {
-    color: '#68BAE8',
-    fontWeight: 'bold',
-  },
-  footerContainer: {
-    marginTop: height * 0.15,
-  },
-  linkSobre: {
-    color: '#ACBC89',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  nomeText: {
-    marginTop: 20,
-    color: '#858585',
-    fontSize: width * 0.04,
-    textAlign: 'center',
-  },
-  inputWrapper: {
-    width: '100%',
-    alignItems: 'flex-start',
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 10,
   },
-
-  errorText: {
-    color: 'red',
+  colorPalette: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 20,
+  },
+  colorOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    margin: 5,
+    borderColor: "#c7c7c7",
+  },
+  timePicker: {
+    padding: 15,
+    backgroundColor: "#F8F8F8",
+    alignItems: "center",
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  timeText: {
     fontSize: 14,
+    color: "#555",
+  },
+  pickerContainer: {
+    backgroundColor: "#F8F8F8",
+    borderRadius: 5,
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+  picker: {
+    height: 50,
+    width: "100%",
+    color: "#555",
+  },
+  saveButton: {
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  deleteButton: {
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+    backgroundColor: '#FF6363',
+  },
+  imagePicker: {
+    height: 200,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  imagePlaceholderText: {
+    color: '#888',
+    fontSize: 16,
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalButton: {
+    width: '100%',
+    padding: 15,
+    alignItems: 'center',
     marginBottom: 10,
-    marginLeft: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  modalCancelButton: {
+    width: '100%',
+    padding: 15,
+    alignItems: 'center',
+    backgroundColor: '#ddd',
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    fontSize: 16,
+  },
+  input: {
+    padding: 12,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  info: {
+    padding: 12,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  freqBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginRight: 10,
+    marginBottom: 10,
+    backgroundColor: "#F8F8F8",
+  },
+  freqBtnSelected: {
+    backgroundColor: "#68BAE8",
+    borderColor: "#68BAE8",
+  },
+  dayBtn: {
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: "#ddd",
+    minWidth: 40,
+    alignItems: "center",
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  dayBtnSelected: {
+    backgroundColor: "#68BAE8",
   },
 });
 

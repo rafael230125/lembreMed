@@ -82,7 +82,7 @@ export default function Cadastro({ navigation }: Props) {
       <View style={styles.outerContainer}>
         <View style={styles.container}>
           <Image
-            source={require('../../assets/logo.png')}
+            source={require('../../../../assets/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
