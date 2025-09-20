@@ -23,7 +23,7 @@ export default function EncerramentoConta({ navigation }: Props) {
       </Text>
 
       <Image 
-        source={require('../../assets/encerramentoconta.png')} 
+        source={require('../../../../assets/encerramentoconta.png')} 
         style={styles.image} 
       />
 

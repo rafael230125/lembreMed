@@ -3,9 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
-  Dimensions,
   TouchableOpacity,
   Alert,
   Platform
@@ -35,8 +33,6 @@ type HomeNavigationProp = CompositeNavigationProp<
 type Props = {
   navigation: HomeNavigationProp;
 };
-
-const { width, height } = Dimensions.get('window');
 
 export default function Home({ navigation }: Props) {
   const [search, setSearch] = useState('');
@@ -138,8 +134,6 @@ export default function Home({ navigation }: Props) {
     }
   };
 
-
-
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: item.cor }]}
@@ -188,6 +182,14 @@ export default function Home({ navigation }: Props) {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 80 }}
+          ListEmptyComponent={() => (
+            <View style={{ alignItems: 'center', marginTop: 50 }}>
+              <Ionicons name="medkit-outline" size={40} color="#999" />
+              <Text style={{ marginTop: 10, fontSize: 16, color: '#999' }}>
+                Nenhum medicamento cadastrado.
+              </Text>
+            </View>
+          )}
         />
       </View>
       <ConfirmDelete
