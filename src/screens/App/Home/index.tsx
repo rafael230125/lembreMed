@@ -11,20 +11,21 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import SearchBar from '../components/SearchBar';
-import { db, collection, getDocs } from '../services/firebaseConfig';
+import SearchBar from '@components/SearchBar';
+import { db, collection, getDocs } from '@services/firebaseConfig';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { getAuth } from "firebase/auth";
-import { query, where } from '../services/firebaseConfig';
+import { query, where } from '@services/firebaseConfig';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { TabParamList, RootStackParamList } from '../types/types';
-import { iniciarBackgroundFetch } from '../backgroundTask/backgroundTasks';
+import { TabParamList, RootStackParamList } from '@typings/types';
+import { iniciarBackgroundFetch } from '@backgroundTask/backgroundTasks';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'react-native';
-import ConfirmDelete from '../components/ConfirmDelete';
+import ConfirmDelete from '@components/ConfirmDelete';
+import styles from './styles';
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -198,73 +199,3 @@ export default function Home({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  outerContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: width * 0.1,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    backgroundColor: '#fff',
-    marginTop: height * 0.07,
-  },
-  title: {
-    fontSize: width * 0.05,
-    fontWeight: 'bold',
-    marginBottom: height * 0.04,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: width * 0.05,
-    fontWeight: 'bold',
-    marginBottom: height * 0.03,
-    marginTop: height * 0.02,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    gap: 12,
-  },
-  icon: {
-    fontSize: 22,
-    textAlign: 'center',
-  },
-  cardText: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  cardTime: {
-    fontSize: 14,
-    color: '#000',
-  },
-  cardIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 25,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-  },
-  cardImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    resizeMode: 'cover',
-  },
-});
