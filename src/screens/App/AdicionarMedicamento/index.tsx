@@ -331,8 +331,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       await processarImagemPrescricao(uri);
     }
   };
-
-
+  
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
   const processarImagemPrescricao = async (uri: string) => {
