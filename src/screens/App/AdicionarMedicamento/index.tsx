@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Dimensions, ScrollView, Linking } from 'react-native';
 import CustomButton from '@components/CustomButton';
 import CustomInputZoom from '@components/CustomInputZoom';
 import CustomInput from '@components/CustomInput';
@@ -8,21 +8,22 @@ import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as ImagePicker from 'expo-image-picker';
-import { Image, Platform } from 'react-native';
+import { Image } from 'react-native';
 import Modal from 'react-native-modal';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '@typings/types';
 import * as Notifications from 'expo-notifications';
-import { GOOGLE_VISION_API_KEY } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as FileSystem from 'expo-file-system';
 
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 export default function AdicionarMedicamento({ navigation }: Props) {
   const [titulo, setTitulo] = useState('');
@@ -44,6 +45,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [bulaUrl, setBulaUrl] = useState('');
   const [medicamentosFirebase, setMedicamentosFirebase] = useState<any[]>([]);
   const [loadingOCR, setLoadingOCR] = useState(false);
+
 
   useEffect(() => {
     async function carregarMedicamentos() {
@@ -112,7 +114,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const uploadImagem = async (uri: string, userId: string): Promise<string> => {
     const storage = getStorage();
 
-    // Converte a imagem local para blob
     const uriToBlob = (uri: string): Promise<Blob> => {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -317,21 +318,22 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       alert('Permita acesso à galeria para escolher imagens.');
       return;
     }
-
-    // Abre a galeria
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
-      quality: 0.8,
+      aspect: [1, 1],
+      quality: 0.5,
     });
 
     if (!result.canceled) {
-      const uri = result.assets[0].uri; // caminho da imagem selecionada
-      setImagem(uri); // exibe no app
-      await processarImagemPrescricao(uri); // processa via Vision API
+      const uri = result.assets[0].uri;
+      setImagem(uri);
+      await processarImagemPrescricao(uri);
     }
   };
 
+
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
   const processarImagemPrescricao = async (uri: string) => {
     try {
@@ -341,99 +343,50 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      const response = await fetch(
-        `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_VISION_API_KEY}`,
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+      const prompt = `
+        Extraia da imagem da receita médica as informações abaixo e responda APENAS em JSON válido:
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requests: [
-              {
-                image: { content: base64 },
-                features: [{ type: "TEXT_DETECTION" }],
-              },
-            ],
-          }),
+          "medicamento": "nome + dosagem",
+          "frequencia": "quantidade em horas, apenas o número, sem texto",
+          "duracao": "em dias, apenas número"
         }
-      );
+        `;
+      const result = await model.generateContent([
+        { text: prompt },
+        { inlineData: { mimeType: "image/jpeg", data: base64 } },
+      ]);
 
-      const result = await response.json();
-      const textoExtraido = result.responses?.[0]?.fullTextAnnotation?.text || "";
-      console.log("Texto OCR:", textoExtraido);
+      let texto = result.response.text();
 
-      // ✅ Captura nome + dosagem (ex: Ciprofloxacino 500mg) linha a linha
-      const linhas = textoExtraido.split('\n');
-      let nomeMedicamento = "";
-      for (const linha of linhas) {
-        const match = linha.match(/\b([A-ZÁÉÍÓÚÃÕÂÊÔÇ][a-záéíóúãõâêôç]+(?:\s[A-ZÁÉÍÓÚÃÕÂÊÔÇa-z]+)?\s\d{1,4}mg)\b/);
-        if (match) {
-          nomeMedicamento = match[0];
-          break; // pega o primeiro válido
-        }
-      }
+      texto = texto.replace(/```json|```/g, "").trim();
 
-      if (nomeMedicamento) {
-        setTitulo(nomeMedicamento);
-        console.log("Medicamento detectado:", nomeMedicamento);
+      const dados = JSON.parse(texto);
+
+      if (dados.medicamento) setTitulo(dados.medicamento);
+
+      if (dados.frequencia !== undefined && !isNaN(Number(dados.frequencia))) {
+        setFrequenciaTipo("horas");
+        setFrequenciaQuantidade(Number(dados.frequencia));
+        setFreqInputText(String(dados.frequencia));
       } else {
-        console.log("Nenhum medicamento detectado.");
+        setFrequenciaTipo("diaria");
+        setFrequenciaQuantidade(1);
+        setFreqInputText("1");
       }
 
-      // 2️⃣ Frequência
-      let frequencia: 'diaria' | 'horas' | 'semana' = 'diaria';
-      let qtdFrequencia = 1;
-
-      const diariaMatch = textoExtraido.match(/(\d+)\s*x\s*ao\s*dia/i);
-      const horasMatch = textoExtraido.match(/a\s*cada\s*(\d+)\s*h/i);
-
-      if (diariaMatch) {
-        frequencia = 'diaria';
-        qtdFrequencia = parseInt(diariaMatch[1]);
-      } else if (horasMatch) {
-        frequencia = 'horas';
-        qtdFrequencia = parseInt(horasMatch[1]);
-      }
-
-      setFrequenciaTipo(frequencia);
-      setFrequenciaQuantidade(qtdFrequencia);
-      setFreqInputText(String(qtdFrequencia));
-
-      const numerosPorExtenso: Record<string, number> = {
-        'um': 1, 'dois': 2, 'três': 3, 'quatro': 4, 'cinco': 5,
-        'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10
-      };
-
-      // Tenta pegar número puro ou por extenso entre parênteses
-      let duracaoMatch = textoExtraido.match(/por\s+(\d+)\s*(?:\(\w+\))?\s+dias/i);
-      let duracao: string;
-
-      if (duracaoMatch) {
-        duracao = `${duracaoMatch[1]} dias`;
-      } else {
-        // Tenta pegar número por extenso fora do parêntese
-        const extensoMatch = textoExtraido.match(/por\s+(\w+)\s+dias/i);
-        if (extensoMatch && numerosPorExtenso[extensoMatch[1].toLowerCase()]) {
-          duracao = `${numerosPorExtenso[extensoMatch[1].toLowerCase()]} dias`;
-        } else {
-          duracao = 'N/A';
-        }
-      }
-
-      console.log('Duração:', duracao);
-
-      // 4️⃣ Mostrar card de confirmação
       Alert.alert(
         "Confirme os dados",
-        `Medicamento: ${nomeMedicamento || "N/A"}\nFrequência: ${qtdFrequencia} ${frequencia}\nDuração: ${duracao}`,
+        `Medicamento: ${dados.medicamento}\nFrequência: ${dados.frequencia}\nDuração: ${dados.duracao}`,
         [
           { text: "Cancelar", style: "cancel" },
           { text: "Confirmar", onPress: () => handleSave() }
         ]
       );
-
     } catch (error) {
-      console.error("Erro OCR:", error);
-      Alert.alert("Erro", "Não foi possível ler a prescrição.");
+      console.error("Erro no Gemini:", error);
+      Alert.alert("Erro", "Não foi possível processar a prescrição.");
     } finally {
       setLoadingOCR(false);
     }
@@ -703,10 +656,11 @@ export default function AdicionarMedicamento({ navigation }: Props) {
                 return;
               }
 
-              const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
                 allowsEditing: true,
-                quality: 0.6,
+                aspect: [1, 1],
+                quality: 0.5,
               });
 
               if (!result.canceled) {
