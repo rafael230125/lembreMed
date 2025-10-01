@@ -8,35 +8,30 @@ type UserData = {
   phone?: string;
   birthDate?: string;
   gender?: string;
-  role?: string; 
+  role?: string;
   profileImage?: string;
 };
 
-// Define os métodos disponíveis no contexto
 type UserContextType = {
-  userData: UserData; // Dados do usuário
-  setUserData: React.Dispatch<React.SetStateAction<UserData>>; // Atualizar todos os dados
-  updateUserField: (field: keyof UserData, value: string) => void; // Atualizar um campo
-  resetUserData: () => void; // Resetar os dados
+  userData: UserData;
+  setUserData: React.Dispatch<React.SetStateAction<UserData>>;
+  updateUserField: (field: keyof UserData, value: string) => void;
+  resetUserData: () => void;
 };
 
-// Cria o contexto
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Define o provedor do contexto
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<UserData>({});
 
-  // Atualiza um campo individualmente
   const updateUserField = (field: keyof UserData, value: string) => {
     setUserData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Reseta os dados do usuário
   const resetUserData = () => {
     setUserData({});
   };
-  useEffect(() => {iniciarBackgroundFetch();}, []);
+  useEffect(() => { iniciarBackgroundFetch(); }, []);
   return (
     <UserContext.Provider value={{ userData, setUserData, updateUserField, resetUserData }}>
       {children}
@@ -44,7 +39,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook para acessar o contexto
 export const useUserContext = () => {
   const context = useContext(UserContext);
   if (!context) {

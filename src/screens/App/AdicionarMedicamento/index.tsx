@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Dimensions, ScrollView, Linking } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import CustomButton from '@components/CustomButton';
-import CustomInputZoom from '@components/CustomInputZoom';
 import CustomInput from '@components/CustomInput';
 import { db } from '@services/firebaseConfig';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 import Modal from 'react-native-modal';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -15,11 +13,10 @@ import { TabParamList } from '@typings/types';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useGeminiOCR } from "@services/gemini";
 
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import * as FileSystem from 'expo-file-system';
+import { handleChooseImage, handleTakePicture, uploadImagem, escolherImagemComOCR } from "@utils/imageUtils";
 
 export default function AdicionarMedicamento({ navigation }: Props) {
   const [titulo, setTitulo] = useState('');
@@ -34,7 +31,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [diasSemanaSelecionados, setDiasSemanaSelecionados] = useState<number[]>([]);
   const [dataHoraInicio, setDataHoraInicio] = useState(new Date());
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
-  const [loadingOCR, setLoadingOCR] = useState(false);
+  const { processarImagem, loading } = useGeminiOCR();
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -42,71 +39,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     '#FFF4E3', '#E3FFE3', '#F9E6FF',
     '#E3F9FF', '#FFFCE3', '#E3FFF4',
   ];
-
-  const handleChooseImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Permita acesso à galeria para escolher imagens.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-
-    if (!result.canceled) {
-      setImagem(result.assets[0].uri);
-    }
-  };
-
-  const handleTakePicture = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Permita acesso à câmera para tirar fotos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-
-    if (!result.canceled) {
-      setImagem(result.assets[0].uri);
-    }
-  };
-
-  const uploadImagem = async (uri: string, userId: string): Promise<string> => {
-    const storage = getStorage();
-
-    const uriToBlob = (uri: string): Promise<Blob> => {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => {
-          resolve(xhr.response);
-        };
-        xhr.onerror = () => {
-          reject(new Error('Erro ao converter imagem em blob'));
-        };
-        xhr.responseType = 'blob';
-        xhr.open('GET', uri, true);
-        xhr.send(null);
-      });
-    };
-
-    const blob = await uriToBlob(uri);
-    const imageName = `medicamentos/${userId}/${Date.now()}.jpg`;
-    const imageRef = ref(storage, imageName);
-
-    await uploadBytes(imageRef, blob);
-    const downloadURL = await getDownloadURL(imageRef);
-    return downloadURL;
-  };
 
   async function agendarNotificacao(
     dataInicio: Date,
@@ -262,86 +194,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     }
   };
 
-  const escolherImagemGaleria = async () => {
-    // Pede permissão para acessar a galeria
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Permita acesso à galeria para escolher imagens.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setImagem(uri);
-      await processarImagemPrescricao(uri);
-    }
-  };
-
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-
-  const processarImagemPrescricao = async (uri: string) => {
-    try {
-      setLoadingOCR(true);
-
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-      const prompt = `
-        Extraia da imagem da receita médica as informações abaixo e responda APENAS em JSON válido:
-        {
-          "medicamento": "nome + dosagem",
-          "frequencia": "quantidade em horas, apenas o número, sem texto",
-          "duracao": "em dias, apenas número"
-        }
-        `;
-      const result = await model.generateContent([
-        { text: prompt },
-        { inlineData: { mimeType: "image/jpeg", data: base64 } },
-      ]);
-
-      let texto = result.response.text();
-
-      texto = texto.replace(/```json|```/g, "").trim();
-
-      const dados = JSON.parse(texto);
-
-      if (dados.medicamento) setTitulo(dados.medicamento);
-
-      if (dados.frequencia !== undefined && !isNaN(Number(dados.frequencia))) {
-        setFrequenciaTipo("horas");
-        setFrequenciaQuantidade(Number(dados.frequencia));
-        setFreqInputText(String(dados.frequencia));
-      } else {
-        setFrequenciaTipo("diaria");
-        setFrequenciaQuantidade(1);
-        setFreqInputText("1");
-      }
-
-      Alert.alert(
-        "Confirme os dados",
-        `Medicamento: ${dados.medicamento}\nFrequência: ${dados.frequencia}\nDuração: ${dados.duracao}`,
-        [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Confirmar", onPress: () => handleSave() }
-        ]
-      );
-    } catch (error) {
-      console.error("Erro no Gemini:", error);
-      Alert.alert("Erro", "Não foi possível processar a prescrição.");
-    } finally {
-      setLoadingOCR(false);
-    }
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} >
       <View style={styles.outerContainer}>
@@ -493,14 +345,14 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             <View style={styles.modalContainer}>
               <TouchableOpacity style={styles.modalButton} onPress={async () => {
                 setImageOptionsVisible(false);
-                await handleTakePicture();
+                await handleTakePicture(setImagem);
               }}>
                 <Text style={styles.modalButtonText}>Tirar foto</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.modalButton} onPress={async () => {
                 setImageOptionsVisible(false);
-                await handleChooseImage();
+                await handleChooseImage(setImagem);
               }}>
                 <Text style={styles.modalButtonText}>Escolher da galeria</Text>
               </TouchableOpacity>
@@ -520,12 +372,33 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             </View>
           </Modal>
 
-          <CustomButton title="Preencher com IA" style={styles.iaButton} onPress={escolherImagemGaleria} />
+          <CustomButton title="Preencher com IA" onPress={() => escolherImagemComOCR(
+            setImagem,
+            setTitulo,
+            setFrequenciaTipo,
+            setFrequenciaQuantidade,
+            setFreqInputText,
+            handleSave,
+            processarImagem
+          )} />
 
           <CustomButton title="Salvar" style={styles.saveButton} onPress={handleSave} />
 
         </View>
       </View>
+      {loading && (
+        <View style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: '#ffffff',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 999
+        }}>
+          <ActivityIndicator size="large" color="#70C4E8" />
+        </View>
+      )}
     </ScrollView>
   );
 }
+
