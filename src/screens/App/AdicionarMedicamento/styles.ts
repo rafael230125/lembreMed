@@ -64,6 +64,12 @@ const styles = StyleSheet.create({
     width: "100%",
     color: "#555",
   },
+  iaButton: {
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+  },
   saveButton: {
     paddingVertical: 15,
     borderRadius: 10,
