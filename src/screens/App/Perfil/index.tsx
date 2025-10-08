@@ -65,8 +65,6 @@ export default function Perfil({ navigation }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Perfil</Text>
-
         {user ? (
           <View style={styles.profileContainer}>
             <View style={styles.profileCircle}>
