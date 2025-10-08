@@ -10,7 +10,6 @@ import { doc, setDoc } from 'firebase/firestore';
 import { MaskedTextInput } from 'react-native-mask-text';
 import { TextInput } from 'react-native';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import * as FileSystem from 'expo-file-system';
 import Modal from 'react-native-modal';
 import styles from './styles';
 
@@ -37,8 +36,8 @@ export default function InformacaoConta({ navigation }: Props) {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -57,7 +56,7 @@ export default function InformacaoConta({ navigation }: Props) {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,

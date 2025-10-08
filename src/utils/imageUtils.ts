@@ -2,7 +2,6 @@ import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Escolher imagem da galeria
 export const handleChooseImage = async (
   setImagem: (uri: string) => void
 ) => {
@@ -12,8 +11,8 @@ export const handleChooseImage = async (
     return;
   }
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ['images'],
     allowsEditing: true,
     aspect: [1, 1],
     quality: 0.5,
@@ -24,7 +23,6 @@ export const handleChooseImage = async (
   }
 };
 
-// Tirar foto com a câmera
 export const handleTakePicture = async (
   setImagem: (uri: string) => void
 ) => {
@@ -35,7 +33,7 @@ export const handleTakePicture = async (
   }
 
   const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ['images'],
     allowsEditing: true,
     aspect: [1, 1],
     quality: 0.5,
@@ -46,7 +44,6 @@ export const handleTakePicture = async (
   }
 };
 
-// Upload da imagem para Firebase Storage
 export const uploadImagem = async (uri: string, userId: string): Promise<string> => {
   const storage = getStorage();
 
@@ -69,7 +66,6 @@ export const uploadImagem = async (uri: string, userId: string): Promise<string>
   return await getDownloadURL(imageRef);
 };
 
-// Escolher imagem + processar com OCR
 export const escolherImagemComOCR = async (
   setImagem: (uri: string) => void,
   setTitulo: (titulo: string) => void,
@@ -79,8 +75,8 @@ export const escolherImagemComOCR = async (
   handleSave: () => void,
   processarImagem: (uri: string) => Promise<{ medicamento: string, frequencia: string, duracao: string }>
 ) => {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ['images'],
     allowsEditing: true,
     aspect: [1, 1],
     quality: 0.5,
