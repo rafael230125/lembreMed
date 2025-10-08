@@ -1,28 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Dimensions, StyleSheet, ScrollView, Linking } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import CustomButton from '@components/CustomButton';
-import CustomInputZoom from '@components/CustomInputZoom';
 import CustomInput from '@components/CustomInput';
 import { db } from '@services/firebaseConfig';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import * as ImagePicker from 'expo-image-picker';
-import { Image, Platform } from 'react-native';
+import { Image } from 'react-native';
 import Modal from 'react-native-modal';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '@typings/types';
 import * as Notifications from 'expo-notifications';
-import { Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
+import { useGeminiOCR } from "@services/gemini";
 
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import * as FileSystem from 'expo-file-system';
-
-
-const { width, height } = Dimensions.get('window');
+import { handleChooseImage, handleTakePicture, uploadImagem, escolherImagemComOCR } from "@utils/imageUtils";
 
 export default function AdicionarMedicamento({ navigation }: Props) {
   const [titulo, setTitulo] = useState('');
@@ -36,32 +30,8 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [frequenciaQuantidade, setFrequenciaQuantidade] = useState<number>(1);
   const [diasSemanaSelecionados, setDiasSemanaSelecionados] = useState<number[]>([]);
   const [dataHoraInicio, setDataHoraInicio] = useState(new Date());
-  const [isFreqInputVisible, setFreqInputVisible] = useState(false);
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalBuscarMedicamento, setModalBuscarMedicamento] = useState('');
-  const [bulaDisponivel, setBulaDisponivel] = useState(false);
-  const [bulaUrl, setBulaUrl] = useState('');
-  const [medicamentosFirebase, setMedicamentosFirebase] = useState<any[]>([]);
-
-  useEffect(() => {
-    async function carregarMedicamentos() {
-      try {
-        const snapshot = await getDocs(collection(db, 'bula'));
-        const lista = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setMedicamentosFirebase(lista);
-      } catch (error) {
-        console.error('Erro ao buscar medicamentos:', error);
-        Alert.alert('Erro', 'Não foi possível carregar os medicamentos.');
-      }
-    }
-
-    carregarMedicamentos();
-  }, []);
-
+  const { processarImagem, loading } = useGeminiOCR();
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -69,72 +39,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     '#FFF4E3', '#E3FFE3', '#F9E6FF',
     '#E3F9FF', '#FFFCE3', '#E3FFF4',
   ];
-
-  const handleChooseImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Permita acesso à galeria para escolher imagens.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-
-    if (!result.canceled) {
-      setImagem(result.assets[0].uri);
-    }
-  };
-
-  const handleTakePicture = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Permita acesso à câmera para tirar fotos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-
-    if (!result.canceled) {
-      setImagem(result.assets[0].uri);
-    }
-  };
-
-  const uploadImagem = async (uri: string, userId: string): Promise<string> => {
-    const storage = getStorage();
-
-    // Converte a imagem local para blob
-    const uriToBlob = (uri: string): Promise<Blob> => {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => {
-          resolve(xhr.response);
-        };
-        xhr.onerror = () => {
-          reject(new Error('Erro ao converter imagem em blob'));
-        };
-        xhr.responseType = 'blob';
-        xhr.open('GET', uri, true);
-        xhr.send(null);
-      });
-    };
-
-    const blob = await uriToBlob(uri);
-    const imageName = `medicamentos/${userId}/${Date.now()}.jpg`;
-    const imageRef = ref(storage, imageName);
-
-    await uploadBytes(imageRef, blob);
-    const downloadURL = await getDownloadURL(imageRef);
-    return downloadURL;
-  };
 
   async function agendarNotificacao(
     dataInicio: Date,
@@ -144,7 +48,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     diasSemanaSelecionados: number[],
     idMedicamento: string
   ) {
-    console.log('Data início (hora local):', dataInicio.toLocaleString());
 
     {
       if (frequenciaTipo === 'diaria') {
@@ -291,106 +194,20 @@ export default function AdicionarMedicamento({ navigation }: Props) {
     }
   };
 
-  const openFreqInput = () => {
-    setFreqInputText(frequenciaQuantidade.toString());
-    setFreqInputVisible(true);
-  };
-
-  const confirmarFreqInput = () => {
-    const num = Number(freqInputText);
-    if (!isNaN(num) && num > 0) {
-      setFrequenciaQuantidade(num);
-      setFreqInputVisible(false);
-    } else {
-      Alert.alert('Número inválido', 'Digite um número válido maior que zero.');
-    }
-  };
-
-  const abrirModal = () => setModalVisible(true);
-  const fecharModal = () => setModalVisible(false);
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} >
       <View style={styles.outerContainer}>
         <View style={styles.container}>
-          <Modal isVisible={modalVisible} style={{ marginVertical: 70, minHeight: height * 0.7 }} onBackdropPress={() => setModalVisible(false)}>
-            <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10 }}>
-              <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
-                <CustomInput
-                  value={modalBuscarMedicamento}
-                  onChangeText={setModalBuscarMedicamento}
-                  placeholder="Digite o nome do medicamento"
-                  placeholderTextColor="#aaa"
-                />
-                {medicamentosFirebase
-                  .filter(medicamento => medicamento.medicamento.toLowerCase().includes(modalBuscarMedicamento.toLowerCase()))
-                  .map((medicamento: any) => (
-                    <TouchableOpacity
-                      key={medicamento.id}
-                      style={{ padding: 15, borderBottomWidth: 1, borderColor: '#ccc' }}
-                      onPress={() => {
-                        setTitulo(medicamento.medicamento);
-                        setFrequenciaTipo(medicamento.frequencia);
-                        if (medicamento.frequencia == 'horas') {
-                          setFreqInputText(String(medicamento.intervalo));
-                        }
-                        fecharModal();
-                        if (medicamento.bula) {
-                          setBulaDisponivel(true);
-                          setBulaUrl(medicamento.urlBula);
-                        } else {
-                          setBulaDisponivel(false);
-                          setBulaUrl('');
-                        }
-                        setImagem(medicamento.img);
-
-                      }}
-                    >
-                      <Text style={{ fontSize: 16 }}>{medicamento.medicamento}</Text>
-                      {medicamento.bula ? (
-                        <Text style={{ color: 'green' }}>Bula disponível</Text>
-                      ) : (
-                        <Text style={{ color: 'red' }}>Bula não disponível</Text>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-              </ScrollView>
-            </View>
-          </Modal>
           <Text style={styles.title}>Adicionar medicamento</Text>
           <Text style={styles.label}>Nome:</Text>
           <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent: 'center', height: 'auto' }}>
-
-            <CustomInputZoom
+            <CustomInput
               value={titulo}
               onChangeText={setTitulo}
               placeholder="Digite o nome"
               placeholderTextColor="#aaa"
             />
-            <TouchableOpacity onPress={abrirModal} style={{ padding: 8, alignItems: 'center', marginTop: -16 }}>
-              <Image
-                source={require('../../../../assets/lupa.png')}
-                style={{ width: 28, height: 28 }}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-
           </View>
-
-          {bulaDisponivel && (
-            <TouchableOpacity
-              onPress={() => {
-                if (bulaUrl) {
-                  Linking.openURL(bulaUrl);
-                } else {
-                  Alert.alert('Bula não disponível', 'Desculpe, a bula deste medicamento não está disponível.');
-                }
-              }}
-              style={{ marginBottom: 20 }}
-            >
-              <Text style={{ color: '#007BFF' }}>Ver bula do medicamento</Text>
-            </TouchableOpacity>
-          )}
           <Text style={styles.label}>Data de Início:</Text>
           <TouchableOpacity
             style={styles.info}
@@ -398,8 +215,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
           >
             <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
           </TouchableOpacity>
-
-
           <DateTimePickerModal
             isVisible={datePickerVisible}
             mode="date"
@@ -431,7 +246,6 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             }}
             onCancel={() => setTimePickerVisible(false)}
           />
-
           <Text style={styles.label}>Frequência:</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
             {['diaria', 'horas', 'semana'].map(tipo => (
@@ -531,14 +345,14 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             <View style={styles.modalContainer}>
               <TouchableOpacity style={styles.modalButton} onPress={async () => {
                 setImageOptionsVisible(false);
-                await handleTakePicture();
+                await handleTakePicture(setImagem);
               }}>
                 <Text style={styles.modalButtonText}>Tirar foto</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.modalButton} onPress={async () => {
                 setImageOptionsVisible(false);
-                await handleChooseImage();
+                await handleChooseImage(setImagem);
               }}>
                 <Text style={styles.modalButtonText}>Escolher da galeria</Text>
               </TouchableOpacity>
@@ -558,10 +372,33 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             </View>
           </Modal>
 
+          <CustomButton title="Preencher com IA" onPress={() => escolherImagemComOCR(
+            setImagem,
+            setTitulo,
+            setFrequenciaTipo,
+            setFrequenciaQuantidade,
+            setFreqInputText,
+            handleSave,
+            processarImagem
+          )} />
+
           <CustomButton title="Salvar" style={styles.saveButton} onPress={handleSave} />
 
         </View>
       </View>
+      {loading && (
+        <View style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: '#ffffff',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 999
+        }}>
+          <ActivityIndicator size="large" color="#70C4E8" />
+        </View>
+      )}
     </ScrollView>
   );
 }
+

@@ -4,7 +4,7 @@ import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
 interface CustomButtonProps {
   title: string;
   onPress: () => void;
-  style?: ViewStyle; 
+  style?: ViewStyle;
 }
 
 export default function CustomButton({ title, onPress, style }: CustomButtonProps) {
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'regular', 
+    fontWeight: 'regular',
     textAlign: 'center',
   },
 });
