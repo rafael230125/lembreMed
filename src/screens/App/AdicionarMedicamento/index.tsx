@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '@components/CustomButton';
 import CustomInput from '@components/CustomInput';
 import { db } from '@services/firebaseConfig';
@@ -14,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
 import { useGeminiOCR } from "@services/gemini";
 import ImagePickerModal from "@components/ImagePickerModal";
+import { useHeaderHeight } from '@react-navigation/elements';
 
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
 import { uploadImagem } from "@utils/imageUtils";
@@ -33,6 +35,8 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
   const { processarImagem, loading } = useGeminiOCR();
   const [ocrMode, setOcrMode] = useState(false);
+
+  const headerHeight = useHeaderHeight();
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -189,7 +193,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       setFrequenciaTipo('diaria');
       setFrequenciaQuantidade(1);
       setDiasSemanaSelecionados([]);
-      setCor('#ffffff'); // reseta
+      setCor('#ffffff');
       setData(new Date());
       setImagem(null);
       setDataHoraInicio(new Date());
@@ -202,189 +206,193 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} >
-      <View style={styles.outerContainer}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Adicionar medicamento</Text>
-          <Text style={styles.label}>Nome:</Text>
-          <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent: 'center', height: 'auto' }}>
-            <CustomInput
-              value={titulo}
-              onChangeText={setTitulo}
-              placeholder="Digite o nome"
-              placeholderTextColor="#aaa"
-            />
-          </View>
-          <Text style={styles.label}>Data de Início:</Text>
-          <TouchableOpacity
-            style={styles.info}
-            onPress={() => setDatePickerVisible(true)}
-          >
-            <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
-          </TouchableOpacity>
-          <DateTimePickerModal
-            isVisible={datePickerVisible}
-            mode="date"
-            date={dataHoraInicio}
-            onConfirm={(selectedDate) => {
-              setDataHoraInicio(selectedDate);
-              setDatePickerVisible(false);
-            }}
-            onCancel={() => setDatePickerVisible(false)}
-          />
-
-          <Text style={styles.label}>Horário:</Text>
-          <TouchableOpacity
-            style={styles.timePicker}
-            onPress={() => setTimePickerVisible(true)}
-          >
-            <Text style={styles.timeText}>
-              {data.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-          </TouchableOpacity>
-
-          <DateTimePickerModal
-            isVisible={isTimePickerVisible}
-            mode="time"
-            date={data}
-            onConfirm={(selectedTime) => {
-              setData(selectedTime);
-              setTimePickerVisible(false);
-            }}
-            onCancel={() => setTimePickerVisible(false)}
-          />
-          <Text style={styles.label}>Frequência:</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
-            {['diaria', 'horas', 'semana'].map(tipo => (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView style={styles.keyboardAvoidingView} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={headerHeight}>
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <View style={styles.outerContainer}>
+            <View style={styles.container}>
+              <Text style={styles.title}>Adicionar medicamento</Text>
+              <Text style={styles.label}>Nome:</Text>
+              <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', alignContent: 'center', height: 'auto' }}>
+                <CustomInput
+                  value={titulo}
+                  onChangeText={setTitulo}
+                  placeholder="Digite o nome"
+                  placeholderTextColor="#aaa"
+                />
+              </View>
+              <Text style={styles.label}>Data de Início:</Text>
               <TouchableOpacity
-                key={tipo}
-                onPress={() => setFrequenciaTipo(tipo as any)}
-                style={[
-                  styles.freqBtn,
-                  frequenciaTipo === tipo && styles.freqBtnSelected,
-                ]}
+                style={styles.info}
+                onPress={() => setDatePickerVisible(true)}
               >
-                <Text style={frequenciaTipo === tipo ? { color: 'white' } : {}}>
-                  {tipo === 'diaria' ? 'Diária' : tipo === 'horas' ? 'A cada X horas' : 'Semanal'}
+                <Text>{dataHoraInicio.toLocaleDateString('pt-BR')}</Text>
+              </TouchableOpacity>
+              <DateTimePickerModal
+                isVisible={datePickerVisible}
+                mode="date"
+                date={dataHoraInicio}
+                onConfirm={(selectedDate) => {
+                  setDataHoraInicio(selectedDate);
+                  setDatePickerVisible(false);
+                }}
+                onCancel={() => setDatePickerVisible(false)}
+              />
+
+              <Text style={styles.label}>Horário:</Text>
+              <TouchableOpacity
+                style={styles.timePicker}
+                onPress={() => setTimePickerVisible(true)}
+              >
+                <Text style={styles.timeText}>
+                  {data.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
 
-          {frequenciaTipo === 'horas' && (
-            <>
-              <Text style={styles.label}>A cada quantas horas?</Text>
-              <CustomInput
-                value={freqInputText}
-                onChangeText={text => {
-                  setFreqInputText(text);
-                  const num = Number(text);
-                  if (!isNaN(num) && num > 0) {
-                    setFrequenciaQuantidade(num);
-                  }
+              <DateTimePickerModal
+                isVisible={isTimePickerVisible}
+                mode="time"
+                date={data}
+                onConfirm={(selectedTime) => {
+                  setData(selectedTime);
+                  setTimePickerVisible(false);
                 }}
-                keyboardType="numeric"
-                placeholder="Ex: 8" placeholderTextColor={''} />
-            </>
-          )}
-
-          {frequenciaTipo === 'semana' && (
-            <>
-              <Text style={styles.label}>Selecione os dias da semana:</Text>
+                onCancel={() => setTimePickerVisible(false)}
+              />
+              <Text style={styles.label}>Frequência:</Text>
               <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
-                {diasSemanaLabels.map((label, i) => {
-                  const selecionado = diasSemanaSelecionados.includes(i);
-                  return (
-                    <TouchableOpacity
-                      key={i}
-                      onPress={() => {
-                        if (selecionado) {
-                          setDiasSemanaSelecionados(diasSemanaSelecionados.filter(d => d !== i));
-                        } else {
-                          setDiasSemanaSelecionados([...diasSemanaSelecionados, i]);
-                        }
-                      }}
-                      style={[
-                        styles.dayBtn,
-                        selecionado && styles.dayBtnSelected,
-                      ]}
-                    >
-                      <Text style={selecionado ? { color: 'white' } : {}}>{label}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                {['diaria', 'horas', 'semana'].map(tipo => (
+                  <TouchableOpacity
+                    key={tipo}
+                    onPress={() => setFrequenciaTipo(tipo as any)}
+                    style={[
+                      styles.freqBtn,
+                      frequenciaTipo === tipo && styles.freqBtnSelected,
+                    ]}
+                  >
+                    <Text style={frequenciaTipo === tipo ? { color: 'white' } : {}}>
+                      {tipo === 'diaria' ? 'Diária' : tipo === 'horas' ? 'A cada X horas' : 'Semanal'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            </>
-          )}
 
-          <Text style={styles.label}>Cor:</Text>
-          <View style={styles.colorPalette}>
-            {predefinedColors.map((color) => (
-              <TouchableOpacity
-                key={color}
-                style={[
-                  styles.colorOption,
-                  { backgroundColor: color, borderWidth: cor === color ? 3 : 0 },
-                ]}
-                onPress={() => setCor(color)}
+              {frequenciaTipo === 'horas' && (
+                <>
+                  <Text style={styles.label}>A cada quantas horas?</Text>
+                  <CustomInput
+                    value={freqInputText}
+                    onChangeText={text => {
+                      setFreqInputText(text);
+                      const num = Number(text);
+                      if (!isNaN(num) && num > 0) {
+                        setFrequenciaQuantidade(num);
+                      }
+                    }}
+                    keyboardType="numeric"
+                    placeholder="Ex: 8" placeholderTextColor={''} />
+                </>
+              )}
+
+              {frequenciaTipo === 'semana' && (
+                <>
+                  <Text style={styles.label}>Selecione os dias da semana:</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
+                    {diasSemanaLabels.map((label, i) => {
+                      const selecionado = diasSemanaSelecionados.includes(i);
+                      return (
+                        <TouchableOpacity
+                          key={i}
+                          onPress={() => {
+                            if (selecionado) {
+                              setDiasSemanaSelecionados(diasSemanaSelecionados.filter(d => d !== i));
+                            } else {
+                              setDiasSemanaSelecionados([...diasSemanaSelecionados, i]);
+                            }
+                          }}
+                          style={[
+                            styles.dayBtn,
+                            selecionado && styles.dayBtnSelected,
+                          ]}
+                        >
+                          <Text style={selecionado ? { color: 'white' } : {}}>{label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+
+              <Text style={styles.label}>Cor:</Text>
+              <View style={styles.colorPalette}>
+                {predefinedColors.map((color) => (
+                  <TouchableOpacity
+                    key={color}
+                    style={[
+                      styles.colorOption,
+                      { backgroundColor: color, borderWidth: cor === color ? 3 : 0 },
+                    ]}
+                    onPress={() => setCor(color)}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.label}>Foto do medicamento:</Text>
+
+              <TouchableOpacity onPress={() => setImageOptionsVisible(true)} style={styles.imagePicker}>
+                {imagem ? (
+                  <Image
+                    source={{ uri: imagem }}
+                    style={styles.imagePreview}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <Text style={styles.imagePlaceholderText}>Toque para adicionar imagem</Text>
+                )}
+              </TouchableOpacity>
+
+              <ImagePickerModal
+                isVisible={isImageOptionsVisible}
+                onClose={() => setImageOptionsVisible(false)}
+                imagem={imagem}
+                setImagem={setImagem}
+                ocrMode={ocrMode}
+                setOcrMode={setOcrMode}
+                setTitulo={setTitulo}
+                setFrequenciaTipo={setFrequenciaTipo}
+                setFrequenciaQuantidade={setFrequenciaQuantidade}
+                setFreqInputText={setFreqInputText}
+                processarImagem={processarImagem}
+                handleSave={handleSave}
               />
-            ))}
+
+              <CustomButton
+                title="Preencher com IA"
+                onPress={() => {
+                  setOcrMode(true);
+                  setImageOptionsVisible(true);
+                }}
+              />
+
+              <CustomButton title="Salvar" style={styles.saveButton} onPress={handleSave} />
+
+            </View>
           </View>
-
-          <Text style={styles.label}>Foto do medicamento:</Text>
-
-          <TouchableOpacity onPress={() => setImageOptionsVisible(true)} style={styles.imagePicker}>
-            {imagem ? (
-              <Image
-                source={{ uri: imagem }}
-                style={styles.imagePreview}
-                resizeMode="contain"
-              />
-            ) : (
-              <Text style={styles.imagePlaceholderText}>Toque para adicionar imagem</Text>
-            )}
-          </TouchableOpacity>
-
-          <ImagePickerModal
-            isVisible={isImageOptionsVisible}
-            onClose={() => setImageOptionsVisible(false)}
-            imagem={imagem}
-            setImagem={setImagem}
-            ocrMode={ocrMode}
-            setOcrMode={setOcrMode}
-            setTitulo={setTitulo}
-            setFrequenciaTipo={setFrequenciaTipo}
-            setFrequenciaQuantidade={setFrequenciaQuantidade}
-            setFreqInputText={setFreqInputText}
-            processarImagem={processarImagem}
-            handleSave={handleSave}
-          />
-
-          <CustomButton
-            title="Preencher com IA"
-            onPress={() => {
-              setOcrMode(true);
-              setImageOptionsVisible(true);
-            }}
-          />
-
-          <CustomButton title="Salvar" style={styles.saveButton} onPress={handleSave} />
-
-        </View>
-      </View>
-      {loading && (
-        <View style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: '#ffffff',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 999
-        }}>
-          <ActivityIndicator size="large" color="#70C4E8" />
-        </View>
-      )}
-    </ScrollView>
+          {loading && (
+            <View style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: '#ffffff',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 999
+            }}>
+              <ActivityIndicator size="large" color="#70C4E8" />
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

@@ -3,7 +3,14 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-
+  safeArea: { 
+    flex: 1,
+    backgroundColor: '#fff', 
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   scrollContainer: {
     flexGrow: 1,
   },
