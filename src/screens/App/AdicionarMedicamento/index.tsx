@@ -7,16 +7,16 @@ import { collection, addDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Image } from 'react-native';
-import Modal from 'react-native-modal';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '@typings/types';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
 import { useGeminiOCR } from "@services/gemini";
+import ImagePickerModal from "@components/ImagePickerModal";
 
 type Props = BottomTabScreenProps<TabParamList, 'AdicionarMedicamento'>;
-import { handleChooseImage, handleTakePicture, uploadImagem, escolherImagemComOCR } from "@utils/imageUtils";
+import { uploadImagem } from "@utils/imageUtils";
 
 export default function AdicionarMedicamento({ navigation }: Props) {
   const [titulo, setTitulo] = useState('');
@@ -32,6 +32,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
   const [dataHoraInicio, setDataHoraInicio] = useState(new Date());
   const [freqInputText, setFreqInputText] = useState(frequenciaQuantidade.toString());
   const { processarImagem, loading } = useGeminiOCR();
+  const [ocrMode, setOcrMode] = useState(false);
 
   const diasSemanaLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -338,49 +339,28 @@ export default function AdicionarMedicamento({ navigation }: Props) {
             )}
           </TouchableOpacity>
 
-          <Modal
+          <ImagePickerModal
             isVisible={isImageOptionsVisible}
-            onBackdropPress={() => setImageOptionsVisible(false)}
-          >
-            <View style={styles.modalContainer}>
-              <TouchableOpacity style={styles.modalButton} onPress={async () => {
-                setImageOptionsVisible(false);
-                await handleTakePicture(setImagem);
-              }}>
-                <Text style={styles.modalButtonText}>Tirar foto</Text>
-              </TouchableOpacity>
+            onClose={() => setImageOptionsVisible(false)}
+            imagem={imagem}
+            setImagem={setImagem}
+            ocrMode={ocrMode}
+            setOcrMode={setOcrMode}
+            setTitulo={setTitulo}
+            setFrequenciaTipo={setFrequenciaTipo}
+            setFrequenciaQuantidade={setFrequenciaQuantidade}
+            setFreqInputText={setFreqInputText}
+            processarImagem={processarImagem}
+            handleSave={handleSave}
+          />
 
-              <TouchableOpacity style={styles.modalButton} onPress={async () => {
-                setImageOptionsVisible(false);
-                await handleChooseImage(setImagem);
-              }}>
-                <Text style={styles.modalButtonText}>Escolher da galeria</Text>
-              </TouchableOpacity>
-
-              {imagem && (
-                <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#ffcccc' }]} onPress={() => {
-                  setImageOptionsVisible(false);
-                  setImagem(null);
-                }}>
-                  <Text style={[styles.modalButtonText, { color: '#a00' }]}>Remover imagem</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setImageOptionsVisible(false)}>
-                <Text style={styles.modalButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          </Modal>
-
-          <CustomButton title="Preencher com IA" onPress={() => escolherImagemComOCR(
-            setImagem,
-            setTitulo,
-            setFrequenciaTipo,
-            setFrequenciaQuantidade,
-            setFreqInputText,
-            handleSave,
-            processarImagem
-          )} />
+          <CustomButton
+            title="Preencher com IA"
+            onPress={() => {
+              setOcrMode(true);
+              setImageOptionsVisible(true);
+            }}
+          />
 
           <CustomButton title="Salvar" style={styles.saveButton} onPress={handleSave} />
 
