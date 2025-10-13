@@ -1,5 +1,5 @@
 import { useState } from "react";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from 'expo-file-system/legacy';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -12,8 +12,9 @@ export function useGeminiOCR() {
       setLoading(true);
 
       const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: "base64",
       });
+
 
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
