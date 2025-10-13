@@ -50,7 +50,7 @@ export default function ImagePickerModal({
             `Medicamento: ${dados.medicamento}\nFrequência: ${dados.frequencia}h\nDuração: ${dados.duracao} dias`,
             [
               { text: "Cancelar", style: "cancel" },
-              { text: "Confirmar", onPress: handleSave }
+              { text: "Confirmar", onPress: () => { /* só fecha o alert */ } }
             ]
           );
         } catch {

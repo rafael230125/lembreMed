@@ -138,6 +138,12 @@ export default function AdicionarMedicamento({ navigation }: Props) {
         return;
       }
 
+      // NOVO: validação da cor
+      if (!cor || cor === '#ffffff') {
+        Alert.alert('Erro', 'Selecione uma cor para o cartão.');
+        return;
+      }
+
       if (frequenciaTipo === 'semana' && diasSemanaSelecionados.length === 0) {
         Alert.alert('Erro', 'Selecione pelo menos um dia da semana.');
         return;
@@ -183,7 +189,7 @@ export default function AdicionarMedicamento({ navigation }: Props) {
       setFrequenciaTipo('diaria');
       setFrequenciaQuantidade(1);
       setDiasSemanaSelecionados([]);
-      setCor('#ffffff');
+      setCor('#ffffff'); // reseta
       setData(new Date());
       setImagem(null);
       setDataHoraInicio(new Date());
