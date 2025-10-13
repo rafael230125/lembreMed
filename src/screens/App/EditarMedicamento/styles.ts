@@ -15,7 +15,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     backgroundColor: '#fff',
-    marginTop: height * 0.01,
+    marginTop: height * 0.07,
+  },
+  title: {
+    fontSize: width * 0.05,
+    fontWeight: 'bold',
+    marginBottom: height * 0.04,
+    textAlign: 'center',
   },
   label: {
     fontSize: 16,
@@ -62,7 +68,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginTop: 20,
-    marginBottom: 40,
+    marginBottom: 50,
   },
   deleteButton: {
     paddingVertical: 15,
