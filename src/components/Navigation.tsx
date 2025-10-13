@@ -119,20 +119,7 @@ const Navigation = () => {
         <Stack.Screen
           name="EditarMedicamento"
           component={EditarMedicamento}
-          options={{
-            headerShown: true,
-            headerStyle: {
-              elevation: 0,
-              shadowOpacity: 0,
-              borderBottomWidth: 0,
-            },
-            headerTitle: '',
-            headerTitleAlign: 'center',
-            headerTitleStyle: {
-              fontSize: width * 0.05,
-              fontWeight: 'bold',
-            },
-          }}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

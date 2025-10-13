@@ -9,6 +9,8 @@ import { auth, db } from '@services/firebaseConfig';
 import { useUserContext } from '@context/UserContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import styles from '@screens/Auth/styles';
 
 const { width, height } = Dimensions.get('window');
@@ -24,10 +26,42 @@ export default function Login({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [saveEmail, setSaveEmail] = useState<boolean>(false);
+
+  // Função para carregar email salvo
+  const loadSavedEmail = async () => {
+    try {
+      const savedEmail = await AsyncStorage.getItem('savedEmail');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setSaveEmail(true);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar email salvo:', error);
+    }
+  };
+
+  // Função para salvar email
+  const saveEmailToStorage = async (emailToSave: string) => {
+    try {
+      await AsyncStorage.setItem('savedEmail', emailToSave);
+    } catch (error) {
+      console.error('Erro ao salvar email:', error);
+    }
+  };
+
+  // Função para remover email salvo
+  const removeSavedEmail = async () => {
+    try {
+      await AsyncStorage.removeItem('savedEmail');
+    } catch (error) {
+      console.error('Erro ao remover email salvo:', error);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
-      setEmail('');
+      loadSavedEmail();
       setPassword('');
     }, [])
   );
@@ -51,6 +85,13 @@ export default function Login({ navigation }: Props) {
           phone: userData.phone || '',
           birthDate: userData.birthDate || '',
         });
+
+        // Salvar ou remover email baseado na opção do usuário
+        if (saveEmail) {
+          await saveEmailToStorage(email);
+        } else {
+          await removeSavedEmail();
+        }
 
         navigation.navigate('Main');
       } else {
@@ -88,6 +129,18 @@ export default function Login({ navigation }: Props) {
             placeholderTextColor="#aaa"
             secureTextEntry
           />
+
+          <TouchableOpacity 
+            style={styles.checkboxContainer}
+            onPress={() => setSaveEmail(!saveEmail)}
+          >
+            <View style={[styles.checkbox, saveEmail && styles.checkboxChecked]}>
+              {saveEmail && (
+                <Ionicons name="checkmark" size={16} color="#fff" />
+              )}
+            </View>
+            <Text style={styles.checkboxText}>Salvar login</Text>
+          </TouchableOpacity>
 
           {isLoading ? (
             <ActivityIndicator size="large" color="#68BAE8" />

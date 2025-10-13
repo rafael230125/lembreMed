@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from '@screens/App/Home';
 import AdicionarMedicamento from '../screens/App/AdicionarMedicamento';
+import Chat from '@screens/App/Chat';
 import Perfil from '@screens/App/Perfil';
 import { Ionicons } from '@expo/vector-icons';
 import { TabParamList } from '@typings/types';
@@ -36,6 +37,15 @@ const TabNavigation = () => {
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Chat"
+        component={Chat}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubble-outline" size={size} color={color} />
           ),
         }}
       />
