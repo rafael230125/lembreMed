@@ -199,7 +199,6 @@ export default function EditarMedicamento({ navigation }: Props) {
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.outerContainer}>
         <View style={styles.container}>
-          <Text style={styles.title}>Editar medicamento</Text>
           <Text style={styles.label}>Nome:</Text>
           <CustomInput
             value={titulo}
